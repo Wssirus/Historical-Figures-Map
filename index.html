@@ -1,0 +1,3356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>魏晋门阀士族关系图谱</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FBF3E7;
+    --card: #FFF9F1;
+    --text: #31251B;
+    --text-secondary: #8B7662;
+    --accent: #C96F3D;
+    --green: #7E9F7A;
+    --blue: #5B7FA5;
+    --red: #B85450;
+    --gold: #B8973A;
+    --border: #E8D5C0;
+    --shadow: rgba(49, 37, 27, 0.08);
+  }
+
+  body {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    text-align: center;
+    padding: 1.4rem 1.5rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: clamp(1.4rem, 3.6vw, 2rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+
+  header p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .stats {
+    margin-top: 0.45rem;
+    font-size: 0.76rem;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    font-style: normal;
+  }
+
+  .era-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0 0.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .era-btn {
+    font: inherit;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    padding: 0.42rem 0.9rem;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+  }
+  .era-btn:hover { color: var(--text); }
+  .era-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .era-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .era-note {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+    padding-right: 0.2rem;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.9rem 1rem 1rem;
+    gap: 0.7rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ---------- toolbar ---------- */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 0.8rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  #search {
+    font: inherit;
+    font-size: 0.84rem;
+    width: 220px;
+    max-width: 46vw;
+    padding: 0.3rem 0.85rem;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  #search::placeholder { color: #B5A28E; }
+  #search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,111,61,.14); }
+
+  #searchCount { font-size: 0.72rem; color: var(--text-secondary); min-width: 2.4em; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 0.32rem; }
+
+  .face-switch {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--bg);
+    flex: none;
+  }
+
+  .face-btn {
+    font: inherit;
+    font-size: 0.76rem;
+    padding: 0.18rem 0.72rem;
+    border: none;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    white-space: nowrap;
+  }
+  .face-btn:hover { color: var(--text); }
+  .face-btn.active { background: var(--accent); color: #FFF9F1; font-weight: 600; }
+  .face-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    font: inherit;
+    font-size: 0.75rem;
+    padding: 0.16rem 0.6rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .filter-btn:hover { background: var(--bg); }
+  .filter-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .filter-btn.active { border-color: var(--accent); background: rgba(201,111,61,.1); font-weight: 600; }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+  /* ---------- canvas ---------- */
+  .canvas-wrap {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px var(--shadow);
+    overflow: hidden;
+    flex: 1;
+    min-height: 340px;
+  }
+
+  canvas {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+  }
+  canvas.grabbing { cursor: grabbing; }
+  canvas.pointing { cursor: pointer; }
+
+  .controls {
+    display: flex;
+    gap: 0.4rem;
+    position: absolute;
+    top: 0.7rem;
+    right: 0.7rem;
+    z-index: 10;
+  }
+
+  .ctrl-btn {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 1px 4px var(--shadow);
+  }
+  .ctrl-btn:hover, .ctrl-btn:focus-visible { background: var(--bg); color: var(--text); outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .tooltip {
+    position: absolute;
+    left: 0; top: 0;
+    transform: translate(-50%, -140%);
+    background: rgba(49, 37, 27, 0.94);
+    color: #FFF9F1;
+    padding: 0.32rem 0.62rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    line-height: 1.55;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    z-index: 20;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip small { color: #D9C6B0; font-size: 0.7rem; }
+
+  /* ---------- legend ---------- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 1.2rem;
+    padding: 0.7rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .legend-title {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.38rem;
+    font-size: 0.78rem;
+    color: var(--text);
+  }
+
+  .legend-line { width: 26px; height: 3px; border-radius: 2px; }
+  .legend-dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid; }
+
+  .tip {
+    text-align: center;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    padding: 0 0.5rem;
+    font-style: italic;
+  }
+
+  .footnote {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #A08C77;
+    padding: 0 0.5rem 0.4rem;
+  }
+
+  /* ---------- detail panel ---------- */
+  .detail-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: min(430px, 94vw);
+    height: 100vh;
+    background: var(--card);
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 20px var(--shadow);
+    padding: 1.7rem 1.4rem 2.5rem;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .detail-panel.open { transform: translateX(0); }
+
+  .detail-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 32px; height: 32px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .detail-close:hover, .detail-close:focus-visible { background: var(--bg); color: var(--text); outline: 2px solid var(--accent); }
+
+  .detail-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.45rem;
+    color: var(--text);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding-right: 2rem;
+  }
+
+  .detail-zi { font-size: 0.76rem; color: var(--text-secondary); font-weight: 400; letter-spacing: 0.04em; }
+
+  .detail-family-tag {
+    display: inline-block;
+    padding: 0.13rem 0.62rem;
+    border-radius: 20px;
+    font: inherit;
+    font-size: 0.74rem;
+    margin-bottom: 0.9rem;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+  }
+  .detail-family-tag:hover { filter: brightness(1.12); }
+
+  .face-note {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+    margin: -0.45rem 0 0.5rem;
+  }
+
+  .detail-section { margin-top: 1.1rem; }
+
+  .detail-section h3 {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.08em;
+  }
+
+  .detail-section p, .detail-section li {
+    font-size: 0.87rem;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .detail-section ul { list-style: none; padding: 0; }
+
+  .detail-section li {
+    padding: 0.32rem 0;
+    border-bottom: 1px dashed rgba(232, 213, 192, 0.9);
+  }
+  .detail-section li:last-child { border-bottom: none; }
+
+  .rel-type {
+    display: inline-block;
+    font-size: 0.66rem;
+    line-height: 1.55;
+    padding: 0 0.28rem;
+    border: 1px solid;
+    border-radius: 3px;
+    margin-right: 0.34rem;
+    vertical-align: 1px;
+    letter-spacing: 0.02em;
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: 0.87rem;
+    color: #8A4A26;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(138, 74, 38, 0.45);
+  }
+  .link-btn:hover, .link-btn:focus-visible { color: var(--accent); border-bottom-style: solid; outline: none; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.32rem; }
+
+  .chip {
+    font: inherit;
+    font-size: 0.74rem;
+    padding: 0.12rem 0.5rem;
+    border-radius: 14px;
+    border: 1px solid;
+    background: transparent;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .chip:hover { background: rgba(0, 0, 0, 0.045); }
+
+  .family-lead { font-size: 0.8rem; color: var(--text-secondary); }
+
+  /* ---------- 侧栏：家族世系 ---------- */
+  .detail-panel.wide { width: min(620px, 96vw); }
+
+  .family-tree { margin: 0.35rem 0 0; }
+  .family-tree svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .ft-node { cursor: pointer; }
+  .ft-node rect { transition: fill .15s, stroke-width .15s; }
+  .ft-node:hover rect { fill: #F6E7D5; stroke-width: 1.8; }
+  .ft-gen-label { fill: rgba(139, 118, 98, 0.9); font-size: 10.5px; letter-spacing: .1em; }
+  .ft-guide { stroke: rgba(200, 178, 150, 0.34); stroke-width: 1; stroke-dasharray: 3 5; }
+  .ft-edge { fill: none; }
+  .ft-node.ft-hit rect { fill: #F6E7D5; stroke: #C96F3D; stroke-width: 2.2; }
+  .ft-node.ft-hit text { font-weight: 700; }
+  .family-tree.has-hit .ft-node:not(.ft-hit) { opacity: 0.45; }
+  .ft-edge.ft-hit { stroke: #C96F3D; stroke-opacity: 0.95; stroke-width: 2; }
+  .ft-uncle { stroke-opacity: 0.30; stroke-width: 1; stroke-dasharray: 3 4; }
+  .ft-note { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.4rem; letter-spacing: .03em; line-height: 1.6; }
+
+  /* ---------- 左侧：自然语言问答 ---------- */
+  .app-body {
+    flex: 1;
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.8rem 1rem 1rem;
+    max-width: 1800px;
+    margin: 0 auto;
+    width: 100%;
+    align-items: stretch;
+  }
+  .app-body main { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 0; }
+
+  .ask-panel {
+    width: 336px;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px var(--shadow);
+    padding: 0.8rem;
+    min-height: 0;
+    max-height: calc(100vh - 130px);
+    position: sticky;
+    top: 0.8rem;
+  }
+
+  .ask-head { display: flex; align-items: center; gap: 0.5rem; }
+  .ask-title { font-size: 1.02rem; font-weight: 700; letter-spacing: 0.14em; }
+  .ask-tag { font-size: 0.66rem; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 0 0.45rem; }
+
+  .ask-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .ask-chips button {
+    font: inherit; font-size: 0.72rem; color: var(--text-secondary);
+    background: var(--bg); border: 1px solid var(--border); border-radius: 20px;
+    padding: 0.1rem 0.5rem; cursor: pointer; text-align: left;
+  }
+  .ask-chips button:hover { color: var(--text); border-color: var(--accent); }
+
+  .ask-log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.55rem; padding-right: 0.15rem; min-height: 120px; }
+  .qa-msg { font-size: 0.82rem; line-height: 1.72; }
+  .qa-user { align-self: flex-end; background: #F3E3CF; border-radius: 10px 10px 2px 10px; padding: 0.35rem 0.6rem; max-width: 88%; }
+  .qa-bot { border: 1px solid var(--border); background: #FFFDF8; border-radius: 10px; padding: 0.55rem 0.65rem; }
+  .qa-bot h4 { font-size: 0.85rem; margin-bottom: 0.25rem; letter-spacing: 0.03em; }
+  .qa-bot p { margin: 0.2rem 0; }
+  .qa-bot ul { margin: 0.15rem 0 0.2rem 1rem; }
+  .qa-bot li { margin: 0.12rem 0; }
+  .qa-src { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.3rem; }
+  .qa-meta { font-size: 0.68rem; color: var(--text-secondary); margin-top: 0.25rem; display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+  .qa-badge { border: 1px solid var(--border); border-radius: 10px; padding: 0 0.35rem; }
+  .qa-clear { font: inherit; font-size: 0.68rem; color: var(--accent); background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
+
+  .ask-input { display: flex; gap: 0.4rem; }
+  .ask-input input {
+    flex: 1; min-width: 0; font: inherit; font-size: 0.8rem; padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none;
+  }
+  .ask-input input:focus { border-color: var(--accent); }
+  .ask-input button {
+    font: inherit; font-size: 0.8rem; padding: 0.4rem 0.8rem; border: none; border-radius: 8px;
+    background: var(--accent); color: #FFF9F1; cursor: pointer;
+  }
+  .ask-input button:hover { filter: brightness(1.08); }
+  @media (max-width: 1080px) {
+    .app-body { flex-direction: column; padding: 0.6rem; }
+    .ask-panel { width: 100%; max-height: 340px; position: static; }
+    .ask-log { min-height: 90px; }
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 1rem 1rem 0.7rem; }
+    header h1 { letter-spacing: 0.08em; }
+    main { padding: 0.5rem; gap: 0.5rem; }
+    .canvas-wrap { min-height: 70vh; }
+    .legend { gap: 0.35rem 0.8rem; padding: 0.55rem 0.7rem; }
+    .detail-panel { width: 100vw; }
+    #search { width: 150px; }
+    .era-note { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .detail-panel { transition: none; }
+  }
+
+  @media print {
+    body { background: #fff; }
+    .controls, .tip, .footnote, .detail-panel, .toolbar, .era-bar { display: none; }
+    .canvas-wrap { border: 1px solid #ccc; box-shadow: none; min-height: auto; }
+    header { border-bottom: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>魏晋门阀士族关系图谱</h1>
+  <p id="subtitle">曹魏卷——曹氏、夏侯氏与颍川、汝南士族</p>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="app-body">
+  <aside class="ask-panel" id="askPanel" aria-label="自然语言问答">
+    <div class="ask-head">
+      <span class="ask-title">问一问</span>
+      <span class="ask-tag">本地检索</span>
+    </div>
+    <div class="ask-chips" id="askChips">
+      <button data-q="曹操和荀彧是什么关系？">曹操和荀彧是什么关系？</button>
+      <button data-q="王导和司马睿是什么关系？">王导和司马睿是什么关系？</button>
+      <button data-q="荀彧有哪些儿子？">荀彧有哪些儿子？</button>
+      <button data-q="介绍谢安">介绍谢安</button>
+      <button data-q="琅琊王氏">琅琊王氏</button>
+      <button data-q="淝水之战有哪些人参与？">淝水之战有哪些人参与？</button>
+    </div>
+    <div class="ask-log" id="askLog"></div>
+    <div class="ask-input">
+      <input id="askInput" type="text" placeholder="例如：曹操和荀彧是什么关系？" autocomplete="off" aria-label="输入问题">
+      <button id="askSend">提问</button>
+    </div>
+  </aside>
+  <main>
+  <div class="era-bar" id="eraBar" role="tablist" aria-label="切换朝代">
+    <button class="era-btn active" data-era="wei" role="tab" aria-selected="true">曹魏卷</button>
+    <button class="era-btn" data-era="jin" role="tab" aria-selected="false">两晋卷</button>
+    <span class="era-note">同一批节点位置，A面看亲缘、B面看交游政治</span>
+  </div>
+
+  <div class="toolbar">
+    <div class="face-switch" id="faceSwitch" role="tablist" aria-label="切换图面">
+      <button class="face-btn active" data-face="a" role="tab" aria-selected="true">A · 亲缘</button>
+      <button class="face-btn" data-face="b" role="tab" aria-selected="false">B · 交游政治</button>
+    </div>
+    <div class="search-wrap">
+      <input id="search" type="search" placeholder="检索人物 / 字 / 官职…" autocomplete="off" aria-label="检索人物">
+      <span id="searchCount"></span>
+    </div>
+    <div class="filters" id="filters"></div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="graph"></canvas>
+    <div class="controls">
+      <button class="ctrl-btn" id="btnZoomIn" title="放大" aria-label="放大">＋</button>
+      <button class="ctrl-btn" id="btnZoomOut" title="缩小" aria-label="缩小">－</button>
+      <button class="ctrl-btn" id="btnFit" title="适应窗口" aria-label="适应窗口">⤢</button>
+      <button class="ctrl-btn" id="btnReset" title="复位" aria-label="复位">↺</button>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <p class="tip">左侧问答可直接定位人物 · A / B 切换图面 · 点击家族名看该族世系 · 点击人物看详情 · 滚轮缩放 · 双击空白处复位</p>
+  <p class="footnote">数据据《晋书》《宋书》《魏书》《三国志》《世说新语》等整理；生卒年异说者以「约」标识，无考者留空。</p>
+  </main>
+</div>
+
+<div class="detail-panel" id="detailPanel">
+  <button class="detail-close" id="detailClose" aria-label="关闭">✕</button>
+  <div id="detailContent"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ==================== DATA START ====================
+  // 家族：era 标记所属卷（'wei' 曹魏 / 'jin' 两晋 / 数组表示跨卷）；同卷内按数组顺序排布于椭圆
+  // 收录范围：曹魏、两晋门阀。A面看血缘与姻亲，B面看交游与政治
+  const FAMILIES = [
+    // ================= 曹魏卷 =================
+    { id: 'cao', name: '沛国曹氏', color: '#A8842C', era: 'wei',
+      seat: '沛国谯县（今安徽亳州）', eraLabel: '汉末—曹魏',
+      desc: '曹魏皇室。曹腾以宦官起家，曹嵩位至太尉；曹操挟天子以令诸侯，统一北方，曹丕代汉建魏。曹氏与夏侯氏世为婚姻，构成谯沛集团的核心。',
+      highlights: [
+        '曹操迎献帝都许，官渡破袁绍，奠定北方统一',
+        '曹丕代汉建魏，采陈群之议行九品中正制，门阀政治由此发端',
+        '曹氏与夏侯氏「世为婚姻」，夏侯惇、夏侯渊并为元从',
+        '曹爽专政，高平陵之变后曹氏失柄，司马氏代魏'
+      ] },
+    { id: 'xiahou', name: '沛国夏侯氏', color: '#B25B4A', era: 'wei',
+      seat: '沛国谯县（今安徽亳州）', eraLabel: '汉末—曹魏',
+      desc: '谯沛集团另一支柱，与曹氏世为婚姻。夏侯惇、夏侯渊从曹操起兵，夏侯尚、夏侯玄继掌军政。《曹瞒传》称曹嵩本夏侯氏子，故二族关系尤密，此说存疑。',
+      highlights: [
+        '夏侯惇、夏侯渊并为曹操元从，一督诸军、一平关右',
+        '夏侯尚娶曹真之妹，女夏侯徽为司马师妻',
+        '夏侯玄为玄学领袖，「四聪」之一，后为司马师所杀',
+        '夏侯霸因夏侯玄之祸奔蜀，为蜀汉车骑将军'
+      ] },
+    { id: 'xun', name: '颍川荀氏', color: '#4E6B35', era: 'wei',
+      seat: '颍川颍阴（今河南许昌）', eraLabel: '汉末—曹魏',
+      desc: '颍川第一士族。荀淑八子号「八龙」，荀彧、荀攸为曹操谋主，定奉迎天子、官渡坚守之策；荀顗、荀勖佐司马氏代魏，入晋仍居台辅。',
+      highlights: [
+        '荀淑「八龙」，颍川荀氏以经学、清议起家',
+        '荀彧为曹操谋主，奉迎天子都许，官渡力主坚守',
+        '荀彧反对曹操进爵魏公，忧郁而卒，为士族与皇权裂痕之始',
+        '荀顗、荀勖佐司马氏代魏，荀氏入晋仍盛'
+      ] },
+    { id: 'zhong', name: '颍川钟氏', color: '#6E5A8A', era: 'wei',
+      seat: '颍川长社（今河南长葛）', eraLabel: '汉末—曹魏',
+      desc: '颍川名族，以书法与刑名之学著称。钟繇为曹魏太傅，楷书之祖；钟会佐司马昭伐蜀，灭蜀后谋反被杀，钟氏由盛而衰。',
+      highlights: [
+        '钟皓为「颍川四长」之一，钟氏家学之始',
+        '钟繇镇关中，官至太傅，为楷书奠基者',
+        '钟会灭蜀后谋反，死于乱军，钟氏几至覆灭'
+      ] },
+    { id: 'lu', name: '范阳卢氏', color: '#3D5F73', era: 'wei',
+      seat: '范阳涿县（今河北涿州）', eraLabel: '汉末—曹魏',
+      desc: '汉魏经学世家。卢植为汉末名儒，刘备、公孙瓒皆其弟子；卢毓仕魏至司空，掌选举；卢钦入晋为尚书仆射，卢氏遂为北朝「崔卢」之卢。',
+      highlights: [
+        '卢植通古今学，董卓废立时独抗议，几遭杀害',
+        '卢毓十岁而孤，为曹操所重，官至司空，掌选举',
+        '卢钦清俭，仕魏入晋，官至尚书仆射'
+      ] },
+    { id: 'yuan', name: '汝南袁氏', color: '#8A3B5C', era: 'wei',
+      seat: '汝南汝阳（今河南商水）', eraLabel: '汉末—曹魏',
+      desc: '东汉「四世三公」第一门第。袁安以下累世公卿，袁绍据河北为关东盟主，袁术僭号淮南；官渡一战，袁氏由极盛而骤衰。',
+      highlights: [
+        '袁安卧雪，四世三公，门生故吏遍天下',
+        '袁绍为关东盟主，据冀青幽并四州',
+        '袁绍、袁术兄弟相攻，为曹操所乘',
+        '官渡之战，袁绍败于曹操，河北易主'
+      ] },
+    { id: 'sima', name: '河内司马氏', color: '#9C3B2E', era: ['wei', 'jin'],
+      seat: '河内温县（今河南温县）', eraLabel: '曹魏—东晋',
+      desc: '魏晋皇族。司马懿父子三代经营，代魏建晋；八王之乱后国势崩坏，司马睿南渡建康，倚重王氏等门阀立国，形成「主弱臣强」的门阀政治。',
+      highlights: [
+        '司马懿发动高平陵之变，奠定代魏基础',
+        '八王之乱：宗室混战，耗尽西晋国力',
+        '司马睿「王与马，共天下」，皇权受制于门阀',
+        '简文帝、安帝皆为权臣所立，禅代之势已成'
+      ] },
+
+    // ================= 两晋卷 =================
+    { id: 'langya_wang', name: '琅琊王氏', color: '#8B4513', era: 'jin',
+      seat: '琅琊临沂（今山东临沂）', eraLabel: '东汉末—东晋',
+      desc: '中古第一高门。永嘉之乱后王导、王敦拥司马睿渡江建立东晋，形成「王与马，共天下」的格局；王廙、王羲之、王献之三代以艺文名世，王珣、王恭继居权要，门第冠于江左。',
+      highlights: [
+        '王导主政、王敦掌兵，一居中枢、一握上流，奠定门阀政治的基本格局',
+        '书法世家：王廙、王羲之、王献之三代擅名，为江左风流之标',
+        '与皇室累世联姻：王献之尚新安公主，王神爱为晋安帝皇后',
+        '东晋末王恭起兵讨王国宝，开阀阅混战之端'
+      ] },
+    { id: 'taiyuan_wang', name: '太原王氏', color: '#6B5B3A', era: 'jin',
+      seat: '太原晋阳（今山西太原）', eraLabel: '东汉末—东晋',
+      desc: '汉魏旧族，支系繁多。东汉王允诛董卓，曹魏王凌、王昶并至公辅；西晋王浑、王济父子显于朝；东晋王述、王坦之、王国宝三世居权要，与琅琊王氏并称「两王」。',
+      highlights: [
+        '王允诛董卓，为汉末士大夫领袖；王凌谋立曹彪，为「淮南三叛」之首',
+        '王浑平吴、王济尚主，西晋时门第极盛',
+        '王述—王坦之—王国宝三世，与谢安、司马道子关系深密',
+        '王国宝与王恭（琅琊王氏）之争，是东晋末年门阀冲突的导火索'
+      ] },
+    { id: 'chenjun_xie', name: '陈郡谢氏', color: '#2E5D3A', era: 'jin',
+      seat: '陈郡阳夏（今河南太康）', eraLabel: '东晋',
+      desc: '起家较晚而极盛于东晋。谢鲲、谢尚以名士风流显，谢安主政、谢玄建军，淝水一战而定江左，与琅琊王氏并称「王谢」，为门阀政治之极盛。',
+      highlights: [
+        '淝水之战：谢安总调度，谢石、谢玄、谢琰率北府兵破苻坚',
+        '谢玄创建北府兵，为东晋后期军事支柱',
+        '王谢联姻：谢道韫适王凝之，为门阀婚姻之典范',
+        '谢混尚晋陵公主，谢氏与皇室联姻不绝'
+      ] },
+    { id: 'qiaoguo_huan', name: '谯国桓氏', color: '#7B3F6B', era: 'jin',
+      seat: '谯国龙亢（今安徽怀远）', eraLabel: '曹魏—东晋末',
+      desc: '以军功起家的强宗。桓彝死节苏峻之乱，桓温三次北伐、废立天子，桓冲镇荆州、支撑淝水西线；桓玄终至篡晋建楚，旋败于刘裕，桓氏覆灭。',
+      highlights: [
+        '桓温灭成汉、伐前秦、伐前燕，以军功专擅朝政',
+        '桓温废海西公、立简文帝，皇权沦为门阀附庸',
+        '桓冲与谢玄东西策应，取得淝水之捷',
+        '桓玄篡晋建「楚」，是门阀政治的回光返照'
+      ] },
+    { id: 'yingchuan_yu', name: '颍川庾氏', color: '#3A5D8B', era: 'jin',
+      seat: '颍川鄢陵（今河南鄢陵）', eraLabel: '西晋—东晋',
+      desc: '以外戚与清谈起家。庾亮以明帝庾皇后之兄辅政，庾冰、庾翼相继掌中枢与荆州，与王氏争衡；庾氏败后，门第渐衰。',
+      highlights: [
+        '庾文君为晋明帝皇后，庾氏以外戚辅政',
+        '庾亮处置失当，引发苏峻之乱',
+        '庾冰、庾翼兄弟分掌扬州、荆州，与王导对峙',
+        '东晋末庾楷联王恭、附桓玄，为庾氏余绪'
+      ] },
+    { id: 'taishan_yang', name: '泰山羊氏', color: '#3F6E6E', era: 'jin',
+      seat: '泰山南城（今山东平邑）', eraLabel: '东汉末—东晋',
+      desc: '泰山南城望族，以清德著称。羊续悬鱼、羊祜镇襄，文治武功并显；羊徽瑜为司马师继室，羊献容为晋惠帝皇后，与司马氏两世联姻，是西晋政治中举足轻重的外戚家族。',
+      highlights: [
+        '羊续「悬鱼」拒贿，为汉末清吏典范',
+        '羊祜都督荆州，与陆抗对峙，定灭吴之策',
+        '羊徽瑜为司马师继室（景献皇后），羊祜为司马师妻弟',
+        '羊献容为晋惠帝皇后，八王之乱中屡遭废立'
+      ] }
+  ];
+
+  // 人物：gen 为家族内世代序号，用于族内环上的世代排序与侧栏世系图
+  const PEOPLE = [
+    // ---------- 曹魏：沛国曹氏 ----------
+    { id: 'cao_teng', name: '曹腾', zi: '季兴', born: '', died: '', gen: 1, family: 'cao', era: 'wei',
+      title: '中常侍、大长秋、费亭侯',
+      desc: '东汉宦官，历事安、顺、冲、质、桓五帝，官至大长秋，封费亭侯。养子曹嵩，即曹操之父；曹丕称帝后追尊为高皇帝。',
+      source: '《后汉书·曹腾传》' },
+    { id: 'cao_song', name: '曹嵩', zi: '巨高', born: '', died: '193', gen: 2, family: 'cao', era: 'wei',
+      title: '太尉',
+      desc: '曹腾养子，曹操之父。官至太尉，中平五年罢；初平四年避乱琅琊，为陶谦部将张闿所杀。',
+      source: '《三国志·武帝纪》' },
+    { id: 'cao_cao', name: '曹操', zi: '孟德', born: '155', died: '220', gen: 3, family: 'cao', era: 'wei',
+      title: '丞相、魏王（追尊武帝）',
+      desc: '沛国谯人。起兵讨董卓，奉迎献帝都许，官渡破袁绍，统一北方；封魏王，为魏室奠基，终身未称帝。',
+      source: '《三国志·武帝纪》' },
+    { id: 'cao_pi', name: '曹丕', zi: '子桓', born: '187', died: '226', gen: 4, family: 'cao', era: 'wei',
+      title: '魏文帝',
+      desc: '曹操次子。代汉建魏，定都洛阳，采陈群之议行九品中正制；善诗文，《典论·论文》为中国文学批评之始。',
+      source: '《三国志·文帝纪》' },
+    { id: 'cao_zhi', name: '曹植', zi: '子建', born: '192', died: '232', gen: 4, family: 'cao', era: 'wei',
+      title: '陈王',
+      desc: '曹操第三子，建安文学之冠。《洛神赋》《赠白马王彪》传世；储位之争失败，曹丕即位后屡遭迁徙，郁郁而终。',
+      source: '《三国志·陈思王植传》' },
+    { id: 'cao_rui', name: '曹叡', zi: '元仲', born: '204', died: '239', gen: 5, family: 'cao', era: 'wei',
+      title: '魏明帝',
+      desc: '曹丕之子。在位时拒诸葛亮北伐，兴修宫室；临终托孤曹爽、司马懿，为高平陵之变埋下伏笔。',
+      source: '《三国志·明帝纪》' },
+    { id: 'cao_zhen', name: '曹真', zi: '子丹', born: '', died: '231', gen: 4, family: 'cao', era: 'wei',
+      title: '大司马',
+      desc: '曹操养子。父曹邵为曹操募兵，为州郡所杀，操遂收养之。魏文帝、明帝两朝重将，御诸葛亮于陈仓；子曹爽专政，终致高平陵之祸。',
+      source: '《三国志·曹真传》' },
+    { id: 'cao_shuang', name: '曹爽', zi: '昭伯', born: '', died: '249', gen: 5, family: 'cao', era: 'wei',
+      title: '大将军、录尚书事',
+      desc: '曹真之子。明帝托孤辅政，排挤司马懿，专权自恣；正始十年高平陵之变，被司马懿族诛。',
+      source: '《三国志·曹爽传》' },
+    { id: 'cao_xiu', name: '曹休', zi: '文烈', born: '', died: '228', gen: 4, family: 'cao', era: 'wei',
+      title: '大司马',
+      desc: '曹操族子，被称为「吾家千里驹」。镇守扬州，石亭之役为陆逊所败，惭愤发病而卒。',
+      source: '《三国志·曹休传》' },
+    { id: 'cao_hong', name: '曹洪', zi: '子廉', born: '', died: '232', gen: 3, family: 'cao', era: 'wei',
+      title: '骠骑将军',
+      desc: '曹操从弟。荥阳之战让马救曹操，为魏室元从；性吝啬，几为曹丕所杀。',
+      source: '《三国志·曹洪传》' },
+
+    // ---------- 曹魏：沛国夏侯氏 ----------
+    { id: 'xiahou_dun', name: '夏侯惇', zi: '元让', born: '', died: '220', gen: 1, family: 'xiahou', era: 'wei',
+      title: '大将军',
+      desc: '曹操同乡亲信，从起兵，为魏军元勋。中流矢伤左目，仍督诸军；官至大将军，性清俭，余财悉以分施。',
+      source: '《三国志·夏侯惇传》' },
+    { id: 'xiahou_yuan', name: '夏侯渊', zi: '妙才', born: '', died: '219', gen: 1, family: 'xiahou', era: 'wei',
+      title: '征西将军',
+      desc: '夏侯惇族弟。善急行军，平定关右、逐马超；定军山之役为黄忠所斩。',
+      source: '《三国志·夏侯渊传》' },
+    { id: 'xiahou_shang', name: '夏侯尚', zi: '伯仁', born: '', died: '226', gen: 2, family: 'xiahou', era: 'wei',
+      title: '征南大将军',
+      desc: '夏侯渊从子。与曹丕亲善，镇荆州；妻为曹真之妹，女夏侯徽为司马师妻。',
+      source: '《三国志·夏侯尚传》' },
+    { id: 'xiahou_xuan', name: '夏侯玄', zi: '太初', born: '209', died: '254', gen: 3, family: 'xiahou', era: 'wei',
+      title: '太常',
+      desc: '夏侯尚之子，玄学领袖，「四聪」之一。与曹爽交好，高平陵之变后失势，终为司马师所杀。',
+      source: '《三国志·夏侯玄传》' },
+    { id: 'xiahou_ba', name: '夏侯霸', zi: '仲权', born: '', died: '', gen: 2, family: 'xiahou', era: 'wei',
+      title: '车骑将军',
+      desc: '夏侯渊之子。夏侯玄被杀后惧祸奔蜀，为蜀汉车骑将军；曾于洮西大破魏军。',
+      source: '《三国志·夏侯渊传》附' },
+    { id: 'xiahou_hui', name: '夏侯徽', zi: '媛容', born: '211', died: '234', gen: 3, family: 'xiahou', era: 'wei',
+      title: '司马师妻',
+      desc: '夏侯尚之女，司马师妻。史称其雅有识度，生五女；因知司马氏非魏之纯臣，为司马师所鸩，晋室追尊为景怀皇后。',
+      source: '《晋书·后妃传》' },
+    { id: 'xiahou_mao', name: '夏侯楙', zi: '子林', born: '', died: '', gen: 2, family: 'xiahou', era: 'wei',
+      title: '安西将军',
+      desc: '夏侯惇之子，尚曹操女清河公主。都督关中，无武略；诸葛亮北伐时，魏廷议其不足恃。',
+      source: '《三国志·夏侯惇传》附' },
+
+    // ---------- 曹魏：颍川荀氏 ----------
+    { id: 'xun_shu', name: '荀淑', zi: '季和', born: '83', died: '149', gen: 1, family: 'xun', era: 'wei',
+      title: '朗陵侯相',
+      desc: '颍川名士，有子八人，时称「八龙」。荀彧、荀攸皆其后，颍川荀氏由此显。',
+      source: '《后汉书·荀淑传》' },
+    { id: 'xun_shuang', name: '荀爽', zi: '慈明', born: '128', died: '190', gen: 2, family: 'xun', era: 'wei',
+      title: '司空',
+      desc: '荀淑第六子，「八龙」中最知名者。著《易传》，为东汉经学大家；董卓当政时官至司空。',
+      source: '《后汉书·荀爽传》' },
+    { id: 'xun_yu', name: '荀彧', zi: '文若', born: '163', died: '212', gen: 3, family: 'xun', era: 'wei',
+      title: '尚书令',
+      desc: '曹操首席谋主。奉迎天子、定都许昌，官渡之战力主坚守；后因反对曹操进爵魏公，忧郁而卒。',
+      source: '《三国志·荀彧传》' },
+    { id: 'xun_you', name: '荀攸', zi: '公达', born: '157', died: '214', gen: 4, family: 'xun', era: 'wei',
+      title: '尚书令',
+      desc: '荀彧之侄，曹操军师。定河北、平荆州，谋略出众，被曹操称为「谋主」。',
+      source: '《三国志·荀攸传》' },
+    { id: 'xun_yun', name: '荀恽', zi: '长倩', born: '', died: '', gen: 4, family: 'xun', era: 'wei',
+      title: '虎贲中郎将',
+      desc: '荀彧长子，嗣封万岁亭侯，娶曹操女安阳公主。与曹植亲善，为曹丕所忌。',
+      source: '《三国志·荀彧传》' },
+    { id: 'xun_can', name: '荀粲', zi: '奉倩', born: '', died: '', gen: 4, family: 'xun', era: 'wei',
+      title: '未仕（玄学家）',
+      desc: '荀彧幼子，尚玄学，倡「言不尽意」。娶曹洪女，妻病亡，痛悼而卒，年二十九。',
+      source: '《三国志·荀彧传》注引《晋阳秋》' },
+    { id: 'xun_yi', name: '荀顗', zi: '景倩', born: '', died: '274', gen: 4, family: 'xun', era: 'wei',
+      title: '西晋太尉',
+      desc: '荀彧之子。仕魏至司空，佐司马氏代魏，入晋为太尉，封临淮公。',
+      source: '《晋书·荀顗传》' },
+    { id: 'xun_xu', name: '荀勖', zi: '公曾', born: '', died: '289', gen: 5, family: 'xun', era: 'wei',
+      title: '西晋中书监',
+      desc: '荀爽曾孙。仕魏入晋，官至中书监、尚书令，领著作，整理典籍；善音律，有「荀勖笛律」。',
+      source: '《晋书·荀勖传》' },
+
+    // ---------- 曹魏：颍川钟氏 ----------
+    { id: 'zhong_hao', name: '钟皓', zi: '季明', born: '', died: '', gen: 1, family: 'zhong', era: 'wei',
+      title: '林虑长',
+      desc: '颍川长社人，与荀淑、韩韶、陈寔并称「颍川四长」。以清德隐退，为钟氏家学之始。',
+      source: '《后汉书·钟皓传》' },
+    { id: 'zhong_yao', name: '钟繇', zi: '元常', born: '151', died: '230', gen: 2, family: 'zhong', era: 'wei',
+      title: '太傅',
+      desc: '曹魏太傅，书法之祖，楷书奠基者。镇守关中，为曹操稳定西线；官至太傅，封定陵侯。',
+      source: '《三国志·钟繇传》' },
+    { id: 'zhong_yu', name: '钟毓', zi: '稚叔', born: '', died: '263', gen: 3, family: 'zhong', era: 'wei',
+      title: '青州刺史',
+      desc: '钟繇长子。年十四为散骑侍郎，历官青州刺史；弟钟会伐蜀时，毓力言其必败。',
+      source: '《三国志·钟毓传》' },
+    { id: 'zhong_hui', name: '钟会', zi: '士季', born: '225', died: '264', gen: 3, family: 'zhong', era: 'wei',
+      title: '镇西将军、司徒',
+      desc: '钟繇幼子。佐司马昭伐蜀，与邓艾分道灭蜀；后谋据蜀自立，死于乱军，钟氏几至覆灭。',
+      source: '《三国志·钟会传》' },
+
+    // ---------- 曹魏：范阳卢氏 ----------
+    { id: 'lu_zhi', name: '卢植', zi: '子干', born: '', died: '192', gen: 1, family: 'lu', era: 'wei',
+      title: '尚书',
+      desc: '汉末名儒，通古今学，刘备、公孙瓒皆其弟子。董卓议废立时独抗议，几遭杀害；后隐于上谷。',
+      source: '《后汉书·卢植传》' },
+    { id: 'lu_yu', name: '卢毓', zi: '子家', born: '183', died: '257', gen: 2, family: 'lu', era: 'wei',
+      title: '司空',
+      desc: '卢植之子。十岁而孤，为曹操所重；魏文帝、明帝两朝掌选举，官至司空，封容城侯。',
+      source: '《三国志·卢毓传》' },
+    { id: 'lu_qin', name: '卢钦', zi: '子若', born: '', died: '278', gen: 3, family: 'lu', era: 'wei',
+      title: '西晋尚书仆射',
+      desc: '卢毓之子。仕魏为侍中，入晋官至尚书仆射；以清俭称，为晋初名臣。',
+      source: '《晋书·卢钦传》' },
+    { id: 'lu_ting', name: '卢珽', zi: '子笏', born: '', died: '', gen: 3, family: 'lu', era: 'wei',
+      title: '泰山太守',
+      desc: '卢毓之子。官至泰山太守，子卢志为西晋成都王颖谋主。',
+      source: '《晋书·卢志传》' },
+
+    // ---------- 曹魏：汝南袁氏 ----------
+    { id: 'yuan_an', name: '袁安', zi: '邵公', born: '', died: '92', gen: 1, family: 'yuan', era: 'wei',
+      title: '司徒',
+      desc: '汝南袁氏四世三公之始。以「袁安卧雪」著称，官至司徒，子孙累世公卿。',
+      source: '《后汉书·袁安传》' },
+    { id: 'yuan_jing', name: '袁京', zi: '仲誉', born: '', died: '', gen: 2, family: 'yuan', era: 'wei',
+      title: '蜀郡太守',
+      desc: '袁安之子，官至蜀郡太守；其子袁汤为司徒，袁氏门第由此益盛。',
+      source: '《后汉书·袁安传》' },
+    { id: 'yuan_tang', name: '袁汤', zi: '仲河', born: '', died: '', gen: 3, family: 'yuan', era: 'wei',
+      title: '太尉',
+      desc: '袁京之子。历官司空、司徒、太尉，袁氏「四世三公」之盛自此始。',
+      source: '《后汉书·袁安传》' },
+    { id: 'yuan_feng', name: '袁逢', zi: '周阳', born: '', died: '', gen: 4, family: 'yuan', era: 'wei',
+      title: '司空',
+      desc: '袁汤之子。官至司空，生袁绍、袁术；袁绍出继袁成，故绍、术为异母兄弟。',
+      source: '《后汉书·袁安传》' },
+    { id: 'yuan_wei', name: '袁隗', zi: '次阳', born: '', died: '190', gen: 4, family: 'yuan', era: 'wei',
+      title: '太傅',
+      desc: '袁逢之弟。官至太傅，与袁逢并为公辅；董卓入京后，因袁绍起兵而被害。',
+      source: '《后汉书·袁安传》' },
+    { id: 'yuan_shao', name: '袁绍', zi: '本初', born: '', died: '202', gen: 5, family: 'yuan', era: 'wei',
+      title: '大将军',
+      desc: '袁逢之子，出继袁成。据河北，为关东盟主；官渡之战为曹操所败，惭愤发病而卒。',
+      source: '《三国志·袁绍传》' },
+    { id: 'yuan_shu', name: '袁术', zi: '公路', born: '', died: '199', gen: 5, family: 'yuan', era: 'wei',
+      title: '后将军',
+      desc: '袁逢之子，袁绍异母弟。据淮南，僭号称帝，为曹操、吕布所破，呕血而卒。',
+      source: '《三国志·袁术传》' },
+    { id: 'yuan_tan', name: '袁谭', zi: '显思', born: '', died: '205', gen: 6, family: 'yuan', era: 'wei',
+      title: '青州刺史',
+      desc: '袁绍长子。袁绍死后与弟袁尚相攻，为曹操所乘，败死。',
+      source: '《三国志·袁绍传》附' },
+
+    // ---------- 曹魏：河内司马氏 ----------
+    { id: 'sima_lang', name: '司马朗', zi: '伯达', born: '', died: '217', gen: 1, family: 'sima', era: 'wei',
+      title: '兖州刺史',
+      desc: '司马懿长兄。以清慎称，官至兖州刺史；建安二十二年疫病流行，亲巡致疾而卒。',
+      source: '《三国志·司马朗传》' },
+    { id: 'sima_fu', name: '司马孚', zi: '叔达', born: '180', died: '272', gen: 1, family: 'sima', era: 'wei',
+      title: '魏太傅、晋安平王',
+      desc: '司马懿之弟。仕魏至太傅，谨慎自守；入晋封安平王，犹自称「魏之纯臣」。',
+      source: '《晋书·安平献王孚传》' },
+
+    // ---------- 琅琊王氏 ----------
+    { id: 'wang_xiang', name: '王祥', zi: '休徵', born: '184', died: '268', gen: 1, family: 'langya_wang',
+      title: '西晋太保、睢陵公',
+      desc: '琅琊王氏显名之始。以孝行著称，「卧冰求鲤」入二十四孝；魏末历司空、太尉，入晋拜太保，位至三公。',
+      source: '《晋书·王祥传》' },
+    { id: 'wang_lan', name: '王览', zi: '玄通', born: '206', died: '278', gen: 1, family: 'langya_wang',
+      title: '光禄大夫',
+      desc: '王祥异母弟，以悌行称。其子孙繁衍，王导、王敦皆出此支，为琅琊王氏实际的开枝者。',
+      source: '《晋书·王览传》' },
+    { id: 'wang_yan', name: '王衍', zi: '夷甫', born: '256', died: '311', gen: 3, family: 'langya_wang',
+      title: '太尉、尚书令',
+      desc: '西晋清谈领袖，位至三公，口中雌黄、随说随改；永嘉之乱中为石勒所俘，劝进求免，终被推墙压死。',
+      source: '《晋书·王衍传》' },
+    { id: 'wang_dao', name: '王导', zi: '茂弘', born: '276', died: '339', gen: 3, family: 'langya_wang',
+      title: '丞相、录尚书事',
+      desc: '东晋开国元勋。辅司马睿渡江称帝，推行「镇之以静」，笼络吴姓士族，历元、明、成三朝，号为「江左管夷吾」。',
+      source: '《晋书·王导传》' },
+    { id: 'wang_dun', name: '王敦', zi: '处仲', born: '266', died: '324', gen: 3, family: 'langya_wang',
+      title: '大将军、荆州牧',
+      desc: '王导从兄，握长江上流兵权。永昌元年、太宁二年两度举兵东下，攻入建康；病死军中，事败后戮尸。',
+      source: '《晋书·王敦传》' },
+    { id: 'wang_yi', name: '王廙', zi: '世将', born: '276', died: '322', gen: 3, family: 'langya_wang',
+      title: '平南将军、荆州刺史',
+      desc: '王导从弟，晋元帝姨表兄弟，甚见亲待。工书画，尝为羲之讲授笔法，是琅琊王氏艺文传统的重要一环。',
+      source: '《晋书·王廙传》' },
+    { id: 'wang_xizhi', name: '王羲之', zi: '逸少', born: '303', died: '361', gen: 4, family: 'langya_wang',
+      title: '右军将军、会稽内史',
+      desc: '「书圣」。少从王廙习书，博采众长，作《兰亭集序》为「天下第一行书」；为政清简，晚岁游处山阴。',
+      source: '《晋书·王羲之传》' },
+    { id: 'wang_xianzhi', name: '王献之', zi: '子敬', born: '344', died: '386', gen: 5, family: 'langya_wang',
+      title: '中书令',
+      desc: '羲之第七子，与父并称「二王」。尚新安公主，官至中书令，创「一笔书」，为后世行草典范。',
+      source: '《晋书·王献之传》' },
+    { id: 'wang_huizhi', name: '王徽之', zi: '子猷', born: '', died: '388', gen: 5, family: 'langya_wang',
+      title: '黄门侍郎',
+      desc: '羲之第五子，性卓荦不羁。「雪夜访戴」至门不入而返，曰「乘兴而行，兴尽而返」，为江左风流典型。',
+      source: '《晋书·王徽之传》' },
+    { id: 'wang_ningzhi', name: '王凝之', zi: '叔平', born: '', died: '399', gen: 5, family: 'langya_wang',
+      title: '会稽内史、左将军',
+      desc: '羲之次子，谢道韫之夫。笃信五斗米道，孙恩之乱时不设备防，城破被杀。',
+      source: '《晋书·王凝之传》' },
+    { id: 'wang_xun', name: '王珣', zi: '元琳', born: '349', died: '400', gen: 5, family: 'langya_wang',
+      title: '尚书令、东亭侯',
+      desc: '王导之孙。孝武帝朝为亲信，与殷仲堪等共制司马道子；善行书，《伯远帖》为「三希」之一。',
+      source: '《晋书·王珣传》' },
+    { id: 'wang_gong', name: '王恭', zi: '孝伯', born: '', died: '398', gen: 5, family: 'langya_wang',
+      title: '兖青二州刺史',
+      desc: '孝武帝王皇后之兄。安帝即位后起兵讨王国宝，开东晋末年内战之端；后为刘牢之所败，被司马道子杀害。',
+      source: '《晋书·王恭传》' },
+
+    // ---------- 太原王氏 ----------
+    { id: 'wang_yun', name: '王允', zi: '子师', born: '137', died: '192', gen: 1, family: 'taiyuan_wang',
+      title: '司徒、尚书令',
+      desc: '汉末士大夫领袖。与吕布合谋诛董卓，后为李傕、郭汜所杀，宗族遇害。',
+      source: '《后汉书·王允传》' },
+    { id: 'wang_ling', name: '王凌', zi: '彦云', born: '172', died: '251', gen: 2, family: 'taiyuan_wang',
+      title: '太尉',
+      desc: '王允之侄。曹魏末年谋立楚王曹彪，事泄，司马懿率军讨之，王凌饮药自尽，为「淮南三叛」之首。',
+      source: '《三国志·王凌传》' },
+    { id: 'wang_chang', name: '王昶', zi: '文舒', born: '', died: '259', gen: 2, family: 'taiyuan_wang',
+      title: '司空、骠骑将军',
+      desc: '太原晋阳王氏另一支。著《家诫》，官至司空；子王浑为平吴主帅，孙王济尚公主，门第由此大盛。',
+      source: '《三国志·王昶传》' },
+    { id: 'wang_hun', name: '王浑', zi: '玄冲', born: '223', died: '297', gen: 3, family: 'taiyuan_wang',
+      title: '司徒、录尚书事',
+      desc: '王昶之子。咸宁五年与王濬等分道伐吴，以功进爵；后与王濬争功，为时论所讥。',
+      source: '《晋书·王浑传》' },
+    { id: 'wang_ji', name: '王济', zi: '武子', born: '', died: '约290', gen: 4, family: 'taiyuan_wang',
+      title: '侍中、驸马都尉',
+      desc: '王浑之子，尚晋武帝女常山公主。以「人乳蒸豚」斗富著称，善《易》与清谈，为西晋贵游之冠。',
+      source: '《晋书·王济传》' },
+    { id: 'wang_cheng', name: '王承', zi: '安期', born: '', died: '', gen: 4, family: 'taiyuan_wang',
+      title: '东海内史',
+      desc: '王湛之子，王浑之侄。永嘉末渡江，为司马睿所礼，以清谈、政事见称，太原王氏江左一房之祖。',
+      source: '《晋书·王承传》' },
+    { id: 'wang_shu', name: '王述', zi: '怀祖', born: '303', died: '368', gen: 5, family: 'taiyuan_wang',
+      title: '尚书令、蓝田侯',
+      desc: '王承之子。性狷急而政事精核，官至尚书令，封蓝田侯；子坦之、孙国宝皆居权要。',
+      source: '《晋书·王述传》' },
+    { id: 'wang_tanzhi', name: '王坦之', zi: '文度', born: '330', died: '375', gen: 6, family: 'taiyuan_wang',
+      title: '中书令、北中郎将',
+      desc: '王述之子。简文帝临终，与谢安同受顾命；桓温入朝陈兵，坦之流汗沾衣，仍力争于前。',
+      source: '《晋书·王坦之传》' },
+    { id: 'wang_guobao', name: '王国宝', zi: '', born: '', died: '397', gen: 7, family: 'taiyuan_wang',
+      title: '尚书左仆射',
+      desc: '王坦之之子，谢安之婿。党附司马道子，专权纳贿，与王恭交恶；隆安元年被道子赐死。',
+      source: '《晋书·王国宝传》' },
+    { id: 'wang_chen', name: '王忱', zi: '元达', born: '', died: '392', gen: 7, family: 'taiyuan_wang',
+      title: '荆州刺史、建武将军',
+      desc: '王坦之之子，与兄王国宝不睦。历官荆州刺史，嗜酒任诞，为东晋末年方镇重臣。',
+      source: '《晋书·王忱传》' },
+
+    // ---------- 陈郡谢氏 ----------
+    { id: 'xie_heng', name: '谢衡', zi: '', born: '', died: '', gen: 1, family: 'chenjun_xie',
+      title: '国子祭酒、散骑常侍',
+      desc: '谢氏入仕之始。以儒学显于西晋，官国子祭酒；谢鲲、谢裒皆其子，谢安、谢玄一系由此而出。',
+      source: '《晋书·谢鲲传》' },
+    { id: 'xie_kun', name: '谢鲲', zi: '幼舆', born: '281', died: '323', gen: 2, family: 'chenjun_xie',
+      title: '豫章太守',
+      desc: '谢衡之子，谢尚之父。以「任达」著称，曾调戏邻女被折两齿，犹自谓「犹不废我啸歌」。',
+      source: '《晋书·谢鲲传》' },
+    { id: 'xie_pou', name: '谢裒', zi: '', born: '', died: '', gen: 2, family: 'chenjun_xie',
+      title: '太常卿',
+      desc: '谢衡之子，谢安之父。永嘉乱后南渡，官至太常卿，六子皆显，陈郡谢氏由此兴。',
+      source: '《晋书·谢安传》' },
+    { id: 'xie_shang', name: '谢尚', zi: '仁祖', born: '308', died: '357', gen: 3, family: 'chenjun_xie',
+      title: '镇西将军、豫州刺史',
+      desc: '谢鲲之子。善音乐、能清谈，永和中北伐，取许昌、洛阳；与谢安为从兄弟，是谢氏第一代方镇。',
+      source: '《晋书·谢尚传》' },
+    { id: 'xie_yi', name: '谢奕', zi: '无奕', born: '', died: '358', gen: 3, family: 'chenjun_xie',
+      title: '豫州刺史',
+      desc: '谢安之兄。历官剡令、豫州刺史，性豪放；其女谢道韫、其子谢玄皆为江左人物之选。',
+      source: '《晋书·谢奕传》' },
+    { id: 'xie_wan', name: '谢万', zi: '万石', born: '', died: '361', gen: 3, family: 'chenjun_xie',
+      title: '豫州刺史、西中郎将',
+      desc: '谢安之弟。升平三年北伐，矜豪傲物、不抚士卒，未战而溃，废为庶人；谢安自此始有出仕之志。',
+      source: '《晋书·谢万传》' },
+    { id: 'xie_an', name: '谢安', zi: '安石', born: '320', died: '385', gen: 3, family: 'chenjun_xie',
+      title: '丞相、录尚书事',
+      desc: '东晋中兴第一流人物。隐居东山二十年，四十余始仕；淝水之战镇定调度，以八万破前秦之众，功高而善处嫌疑。',
+      source: '《晋书·谢安传》' },
+    { id: 'xie_shi', name: '谢石', zi: '石奴', born: '327', died: '389', gen: 3, family: 'chenjun_xie',
+      title: '卫将军、征讨大都督',
+      desc: '谢安之弟。淝水之战任征讨大都督，统谢玄、谢琰等破苻坚；后以功封南康郡公。',
+      source: '《晋书·谢石传》' },
+    { id: 'xie_xuan', name: '谢玄', zi: '幼度', born: '343', died: '388', gen: 4, family: 'chenjun_xie',
+      title: '车骑将军、兖州刺史',
+      desc: '谢奕之子，谢安之侄。太元初监江北诸军事，组建北府兵；淝水之战率前锋破敌，后北伐收复徐兖，病卒。',
+      source: '《晋书·谢玄传》' },
+    { id: 'xie_yan', name: '谢琰', zi: '瑗度', born: '', died: '400', gen: 4, family: 'chenjun_xie',
+      title: '会稽内史、护军将军',
+      desc: '谢安之子。淝水之战与谢玄同率北府兵；后镇会稽，讨孙恩，因轻敌败死。',
+      source: '《晋书·谢琰传》' },
+    { id: 'xie_daoyun', name: '谢道韫', zi: '', born: '', died: '', gen: 4, family: 'chenjun_xie',
+      title: '王凝之妻',
+      desc: '谢奕之女。以「未若柳絮因风起」咏雪得名，嫁王凝之而不惬；孙恩乱中抽刃出门，手杀数人，气概为世所叹。',
+      source: '《晋书·列女传》' },
+    { id: 'xie_hun', name: '谢混', zi: '叔源', born: '', died: '412', gen: 5, family: 'chenjun_xie',
+      title: '尚书左仆射',
+      desc: '谢琰之子，谢安之孙。尚晋陵公主，风姿俊拔，为江左「风华」之首；后与刘毅同党，为刘裕所杀。',
+      source: '《晋书·谢混传》' },
+
+    // ---------- 谯国桓氏 ----------
+    { id: 'huan_fan', name: '桓范', zi: '元则', born: '', died: '249', gen: 0, family: 'qiaoguo_huan',
+      title: '大司农',
+      desc: '曹魏名臣，著《世要论》。高平陵之变时劝曹爽兄弟奉天子幸许昌以图司马懿；事败被族诛。',
+      source: '《三国志·曹爽传》附' },
+    { id: 'huan_yi_', name: '桓彝', zi: '茂伦', born: '276', died: '328', gen: 1, family: 'qiaoguo_huan',
+      title: '宣城内史',
+      desc: '桓温之父。永嘉南渡，为「中兴名士」之一；苏峻之乱中守宣城，城破死节。',
+      source: '《晋书·桓彝传》' },
+    { id: 'huan_wen', name: '桓温', zi: '元子', born: '312', died: '373', gen: 2, family: 'qiaoguo_huan',
+      title: '大司马、录尚书事、南郡公',
+      desc: '东晋权臣。永和三年灭成汉，太和四年枋头之败，前后三次北伐；太和六年废海西公、立简文帝，专擅朝政，终未及篡而卒。',
+      source: '《晋书·桓温传》' },
+    { id: 'huan_huo', name: '桓豁', zi: '朗子', born: '', died: '377', gen: 2, family: 'qiaoguo_huan',
+      title: '荆州刺史、征西将军',
+      desc: '桓温之弟。桓温北伐时任前锋，后镇荆州；子石虔、石民并以勇武显。',
+      source: '《晋书·桓豁传》' },
+    { id: 'huan_chong', name: '桓冲', zi: '幼子', born: '328', died: '384', gen: 2, family: 'qiaoguo_huan',
+      title: '车骑将军、荆州刺史',
+      desc: '桓温之弟。温死后代镇荆州，忠心晋室，淝水之战牵制前秦西线；闻捷而愧，发病卒。',
+      source: '《晋书·桓冲传》' },
+    { id: 'huan_shiqian', name: '桓石虔', zi: '', born: '', died: '', gen: 3, family: 'qiaoguo_huan',
+      title: '冠军将军',
+      desc: '桓豁之子。勇冠三军，随桓温北伐，屡为先锋，时人比之关张。',
+      source: '《晋书·桓石虔传》' },
+    { id: 'huan_shimin', name: '桓石民', zi: '', born: '', died: '', gen: 3, family: 'qiaoguo_huan',
+      title: '荆州刺史',
+      desc: '桓豁之子。继桓冲之后镇荆州，为桓氏方镇之一。',
+      source: '《晋书·桓石民传》' },
+    { id: 'huan_yi', name: '桓伊', zi: '叔夏', born: '', died: '', gen: 2, family: 'qiaoguo_huan',
+      title: '护军将军、江州刺史',
+      desc: '谯国铚人，与桓温同族别支。淝水之战与谢玄共破苻坚；善音乐，为江左第一笛手，「梅花三弄」传为其作。',
+      source: '《晋书·桓伊传》' },
+    { id: 'huan_xuan', name: '桓玄', zi: '敬道', born: '369', died: '404', gen: 3, family: 'qiaoguo_huan',
+      title: '楚帝',
+      desc: '桓温之子。袭爵南郡公，元兴元年举兵东下，诛司马元显；元兴二年篡晋建「楚」，旋为刘裕所败，被杀。',
+      source: '《晋书·桓玄传》' },
+    { id: 'huan_qian', name: '桓谦', zi: '', born: '', died: '', gen: 3, family: 'qiaoguo_huan',
+      title: '尚书令',
+      desc: '桓冲之子。桓玄执政时为尚书令，玄败后奔后秦，后归荆州谋乱，被杀。',
+      source: '《晋书·桓谦传》' },
+
+    // ---------- 河内司马氏 ----------
+    { id: 'sima_yi', name: '司马懿', zi: '仲达', born: '179', died: '251', gen: 1, family: 'sima', era: ['wei', 'jin'],
+      title: '太尉、丞相、宣帝',
+      desc: '河内温县人。历曹操至曹芳四世，正始十年发动高平陵之变，诛曹爽，独揽魏政，为晋室奠基。',
+      source: '《晋书·宣帝纪》' },
+    { id: 'sima_shi', name: '司马师', zi: '子元', born: '208', died: '255', gen: 2, family: 'sima', era: ['wei', 'jin'],
+      title: '大将军、景帝',
+      desc: '司马懿长子。废魏帝曹芳，立高贵乡公；平定毌丘俭、文钦之乱，眼疾发作而卒。',
+      source: '《晋书·景帝纪》' },
+    { id: 'sima_zhao', name: '司马昭', zi: '子上', born: '211', died: '265', gen: 2, family: 'sima', era: ['wei', 'jin'],
+      title: '相国、晋王、文帝',
+      desc: '司马懿次子。弑魏帝曹髦，灭蜀汉，受封晋王；「司马昭之心，路人皆知」即谓其专权。',
+      source: '《晋书·文帝纪》' },
+    { id: 'sima_yan', name: '司马炎', zi: '安世', born: '236', died: '290', gen: 3, family: 'sima',
+      title: '晋武帝',
+      desc: '司马昭长子。受禅建晋，太康元年灭吴，结束三国分裂；大封宗室，为八王之乱埋下祸根。',
+      source: '《晋书·武帝纪》' },
+    { id: 'sima_zhong', name: '司马衷', zi: '正度', born: '259', died: '307', gen: 4, family: 'sima',
+      title: '晋惠帝',
+      desc: '晋武帝之子。以「何不食肉糜」闻名，贾后干政，终致八王之乱，西晋由盛而衰。',
+      source: '《晋书·惠帝纪》' },
+    { id: 'sima_yue', name: '司马越', zi: '元超', born: '', died: '311', gen: 3, family: 'sima',
+      title: '东海王、太傅',
+      desc: '司马懿侄孙。八王之乱中最后执政，挟惠帝、另立怀帝；永嘉五年忧惧而卒，所部为石勒所破。',
+      source: '《晋书·东海王越传》' },
+    { id: 'sima_zhou', name: '司马伷', zi: '子将', born: '227', died: '283', gen: 2, family: 'sima', era: ['wei', 'jin'],
+      title: '琅琊武王、镇东大将军',
+      desc: '司马懿第五子，司马师、司马昭异母弟。西晋封琅琊王，都督徐州诸军事；咸宁五年出涂中道伐吴。孙司马睿即东晋元帝。',
+      source: '《晋书·琅邪王伷传》' },
+    { id: 'sima_jin', name: '司马觐', zi: '思祖', born: '', died: '290', gen: 3, family: 'sima', era: 'jin',
+      title: '琅琊恭王、冗从仆射',
+      desc: '司马伷长子，嗣琅琊王，官至冗从仆射。子司马睿南渡建康，建立东晋，追赠琅琊恭王。',
+      source: '《晋书·元帝纪》' },
+    { id: 'sima_rui', name: '司马睿', zi: '景文', born: '276', died: '323', gen: 4, family: 'sima',
+      title: '晋元帝',
+      desc: '司马懿曾孙。永嘉末镇建康，在王导、王敦支持下称帝，建立东晋；后不甘王氏专权，忧愤而卒。',
+      source: '《晋书·元帝纪》' },
+    { id: 'sima_shao', name: '司马绍', zi: '道畿', born: '299', died: '325', gen: 5, family: 'sima',
+      title: '晋明帝',
+      desc: '司马睿之子。平王敦之乱，倚庾亮、王导辅政；在位仅三年，为东晋少有的有为之君。',
+      source: '《晋书·明帝纪》' },
+    { id: 'sima_yan2', name: '司马衍', zi: '世根', born: '321', died: '342', gen: 6, family: 'sima',
+      title: '晋成帝',
+      desc: '明帝之子。幼年即位，庾亮辅政，引发苏峻之乱；乱后王导、庾冰共政，江左稍安。',
+      source: '《晋书·成帝纪》' },
+    { id: 'sima_yu', name: '司马昱', zi: '道万', born: '320', died: '372', gen: 5, family: 'sima',
+      title: '晋简文帝',
+      desc: '元帝少子。桓温废海西公后被立为帝，形同傀儡，在位仅八月而崩，遗诏几为桓温所改。',
+      source: '《晋书·简文帝纪》' },
+    { id: 'sima_yao', name: '司马曜', zi: '昌明', born: '352', died: '396', gen: 6, family: 'sima',
+      title: '晋孝武帝',
+      desc: '简文帝之子。淝水之战时在位，赖谢安、谢玄而安；后与司马道子争权，醉酒中为宠妃所弑。',
+      source: '《晋书·孝武帝纪》' },
+    { id: 'sima_daozi', name: '司马道子', zi: '道子', born: '364', died: '403', gen: 6, family: 'sima',
+      title: '会稽王、相国',
+      desc: '孝武帝之弟。太元末专权，引王国宝为腹心，与王恭、桓玄交兵；晚年嗜酒昏乱，为桓玄所废。',
+      source: '《晋书·会稽王道子传》' },
+    { id: 'sima_yuanxian', name: '司马元显', zi: '', born: '382', died: '402', gen: 7, family: 'sima',
+      title: '骠骑大将军、录尚书事',
+      desc: '司马道子之子。少年执政，发浙东诸郡免奴为客者充兵，激起孙恩之乱；元兴元年为桓玄所杀。',
+      source: '《晋书·司马元显传》' },
+    { id: 'sima_dezong', name: '司马德宗', zi: '', born: '382', died: '419', gen: 7, family: 'sima',
+      title: '晋安帝',
+      desc: '孝武帝之子。昏愚不能自理，桓玄废之篡晋；刘裕讨平桓玄后复位，终为刘裕所弑。',
+      source: '《晋书·安帝纪》' },
+
+    // ---------- 颍川庾氏 ----------
+    { id: 'yu_liang', name: '庾亮', zi: '元规', born: '289', died: '340', gen: 1, family: 'yingchuan_yu',
+      title: '中书令、征西将军',
+      desc: '明帝庾皇后之兄。明帝崩后辅政，执意征苏峻入朝，激成苏峻之乱；后出镇武昌，北伐失利，忧愤而卒。',
+      source: '《晋书·庾亮传》' },
+    { id: 'yu_bing', name: '庾冰', zi: '季坚', born: '296', died: '344', gen: 1, family: 'yingchuan_yu',
+      title: '中书监、扬州刺史',
+      desc: '庾亮之弟。成帝时入居中书，专断朝政，与王导分庭抗礼；又以外戚身份安排庾氏子弟居要职。',
+      source: '《晋书·庾冰传》' },
+    { id: 'yu_yi', name: '庾翼', zi: '稚恭', born: '305', died: '345', gen: 1, family: 'yingchuan_yu',
+      title: '安西将军、荆州刺史',
+      desc: '庾亮之弟。继兄镇荆州，锐意北伐，以灭胡平蜀为己任；永和元年病卒，北伐之志未竟。',
+      source: '《晋书·庾翼传》' },
+    { id: 'yu_wenjun', name: '庾文君', zi: '', born: '297', died: '328', gen: 1, family: 'yingchuan_yu',
+      title: '晋明帝皇后',
+      desc: '庾亮之妹。明帝即位立为皇后，成帝时尊为皇太后；苏峻之乱中受辱，忧惧而崩。',
+      source: '《晋书·后妃传》' },
+    { id: 'yu_kai', name: '庾楷', zi: '', born: '', died: '', gen: 2, family: 'yingchuan_yu',
+      title: '豫州刺史',
+      desc: '庾冰之子。东晋末为豫州刺史，与王恭联兵讨王国宝，后附桓玄，为其东下前驱。',
+      source: '《晋书·庾亮传》附' },
+
+    // ---------- 泰山羊氏 ----------
+    { id: 'yang_xu', name: '羊续', zi: '兴祖', born: '142', died: '189', gen: 1, family: 'taishan_yang',
+      title: '东汉南阳太守',
+      desc: '泰山羊氏显名之始。任南阳太守，以「悬鱼拒贿」著称，清节为汉末所重。',
+      source: '《后汉书·羊续传》' },
+    { id: 'yang_dao', name: '羊衜', zi: '', born: '', died: '', gen: 2, family: 'taishan_yang',
+      title: '上党太守',
+      desc: '羊续之子，羊祜、羊徽瑜之父。官上党太守，娶蔡邕之女，羊祜即蔡邕外孙。',
+      source: '《晋书·羊祜传》' },
+    { id: 'yang_dan', name: '羊耽', zi: '', born: '', died: '', gen: 2, family: 'taishan_yang',
+      title: '太常',
+      desc: '羊衜之弟。官至太常，子羊琇为晋武帝亲信，泰山羊氏遂盛于西晋。',
+      source: '《晋书·羊琇传》' },
+    { id: 'yang_hu', name: '羊祜', zi: '叔子', born: '221', died: '278', gen: 3, family: 'taishan_yang',
+      title: '征南大将军、开府仪同三司',
+      desc: '西晋名臣。都督荆州，镇襄阳十年，与吴将陆抗对峙；定灭吴之策，力荐王濬。卒后襄阳百姓罢市，立碑岘山，谓之「堕泪碑」。',
+      source: '《晋书·羊祜传》' },
+    { id: 'yang_huiyu', name: '羊徽瑜', zi: '', born: '214', died: '278', gen: 3, family: 'taishan_yang',
+      title: '晋景献皇后',
+      desc: '羊衜之女，司马师继室。司马师无子，以司马昭之子司马攸为嗣，由羊徽瑜抚养。',
+      source: '《晋书·后妃传》' },
+    { id: 'yang_xiu', name: '羊琇', zi: '稚舒', born: '236', died: '282', gen: 3, family: 'taishan_yang',
+      title: '中护军、散骑常侍',
+      desc: '羊耽之子，景献皇后从父弟。少与司马炎亲狎，助其定储位；性豪侈，「屑炭作兽形以温酒」为世所传。',
+      source: '《晋书·羊琇传》' },
+    { id: 'yang_xuanzhi', name: '羊玄之', zi: '', born: '', died: '', gen: 4, family: 'taishan_yang',
+      title: '尚书右仆射',
+      desc: '羊献容之父。官尚书右仆射，因女为皇后而贵显，八王之乱中随政局起伏。',
+      source: '《晋书·后妃传》' },
+    { id: 'yang_xianrong', name: '羊献容', zi: '', born: '', died: '322', gen: 5, family: 'taishan_yang',
+      title: '晋惠帝皇后',
+      desc: '晋惠帝皇后。八王之乱中屡遭废立，洛阳陷落后为前赵刘曜所纳，立为皇后，身历两朝，为史上罕见。',
+      source: '《晋书·后妃传》' }
+  ];
+
+  // 关系：A面 kin 血缘（含同族）/ marriage 姻亲；B面 alliance 政治同盟 / conflict 对立 / recommend 举荐师承 / friend 交游
+  const RELATIONS = [
+    // ===== 曹魏卷 · A面 血缘 =====
+    { a: 'cao_teng', b: 'cao_song', type: 'kin', label: '养父子' },
+    { a: 'cao_song', b: 'cao_cao', type: 'kin', label: '父子' },
+    { a: 'cao_cao', b: 'cao_pi', type: 'kin', label: '父子（丕为操次子）' },
+    { a: 'cao_cao', b: 'cao_zhi', type: 'kin', label: '父子（植为操第三子）' },
+    { a: 'cao_pi', b: 'cao_rui', type: 'kin', label: '父子' },
+    { a: 'cao_pi', b: 'cao_zhi', type: 'kin', label: '兄弟（同母，卞太后所生）' },
+    { a: 'cao_cao', b: 'cao_zhen', type: 'kin', label: '养父子（真为操族子）' },
+    { a: 'cao_zhen', b: 'cao_shuang', type: 'kin', label: '父子' },
+    { a: 'cao_cao', b: 'cao_xiu', type: 'kin', label: '族父子（休为操族子）' },
+    { a: 'cao_cao', b: 'cao_hong', type: 'kin', label: '从兄弟（洪为操从弟）' },
+
+    { a: 'xiahou_dun', b: 'xiahou_yuan', type: 'kin', label: '族兄弟' },
+    { a: 'xiahou_dun', b: 'xiahou_mao', type: 'kin', label: '父子' },
+    { a: 'xiahou_yuan', b: 'xiahou_shang', type: 'kin', label: '叔侄（尚为渊从子）' },
+    { a: 'xiahou_yuan', b: 'xiahou_ba', type: 'kin', label: '父子' },
+    { a: 'xiahou_shang', b: 'xiahou_xuan', type: 'kin', label: '父子' },
+    { a: 'xiahou_shang', b: 'xiahou_hui', type: 'kin', label: '父女' },
+    { a: 'xiahou_xuan', b: 'xiahou_ba', type: 'kin', label: '从叔侄（玄为霸从子）' },
+
+    { a: 'xun_shu', b: 'xun_shuang', type: 'kin', label: '父子（爽为淑第六子）' },
+    { a: 'xun_shu', b: 'xun_yu', type: 'kin', label: '祖孙（彧为淑孙）' },
+    { a: 'xun_shuang', b: 'xun_yu', type: 'kin', label: '叔侄' },
+    { a: 'xun_yu', b: 'xun_you', type: 'kin', label: '叔侄（攸为彧从子）' },
+    { a: 'xun_yu', b: 'xun_yun', type: 'kin', label: '父子（恽为彧长子）' },
+    { a: 'xun_yu', b: 'xun_can', type: 'kin', label: '父子（粲为彧幼子）' },
+    { a: 'xun_yu', b: 'xun_yi', type: 'kin', label: '父子' },
+    { a: 'xun_yun', b: 'xun_yi', type: 'kin', label: '兄弟' },
+    { a: 'xun_shuang', b: 'xun_xu', type: 'kin', label: '曾祖孙（勖为爽曾孙）' },
+
+    { a: 'zhong_hao', b: 'zhong_yao', type: 'kin', label: '同族（世系失考）' },
+    { a: 'zhong_yao', b: 'zhong_yu', type: 'kin', label: '父子' },
+    { a: 'zhong_yao', b: 'zhong_hui', type: 'kin', label: '父子（会为繇幼子）' },
+    { a: 'zhong_yu', b: 'zhong_hui', type: 'kin', label: '兄弟' },
+
+    { a: 'lu_zhi', b: 'lu_yu', type: 'kin', label: '父子' },
+    { a: 'lu_yu', b: 'lu_qin', type: 'kin', label: '父子' },
+    { a: 'lu_yu', b: 'lu_ting', type: 'kin', label: '父子' },
+    { a: 'lu_qin', b: 'lu_ting', type: 'kin', label: '兄弟' },
+
+    { a: 'yuan_an', b: 'yuan_jing', type: 'kin', label: '父子' },
+    { a: 'yuan_jing', b: 'yuan_tang', type: 'kin', label: '父子' },
+    { a: 'yuan_tang', b: 'yuan_feng', type: 'kin', label: '父子' },
+    { a: 'yuan_tang', b: 'yuan_wei', type: 'kin', label: '父子' },
+    { a: 'yuan_feng', b: 'yuan_shao', type: 'kin', label: '父子（绍出继袁成）' },
+    { a: 'yuan_feng', b: 'yuan_shu', type: 'kin', label: '父子' },
+    { a: 'yuan_shao', b: 'yuan_shu', type: 'kin', label: '兄弟（异母）' },
+    { a: 'yuan_shao', b: 'yuan_tan', type: 'kin', label: '父子（谭为绍长子）' },
+    { a: 'yuan_wei', b: 'yuan_shao', type: 'kin', label: '叔侄' },
+
+    { a: 'sima_lang', b: 'sima_yi', type: 'kin', label: '兄弟' },
+    { a: 'sima_yi', b: 'sima_fu', type: 'kin', label: '兄弟' },
+    { a: 'sima_lang', b: 'sima_fu', type: 'kin', label: '兄弟' },
+    { a: 'sima_lang', b: 'sima_shi', type: 'kin', label: '叔侄' },
+
+    // ===== 曹魏卷 · A面 姻亲 =====
+    { a: 'xiahou_hui', b: 'sima_shi', type: 'marriage', label: '夏侯徽为司马师妻，后被鸩' },
+    { a: 'xiahou_mao', b: 'cao_cao', type: 'marriage', label: '夏侯楙尚曹操女清河公主' },
+    { a: 'xiahou_shang', b: 'cao_zhen', type: 'marriage', label: '夏侯尚娶曹真之妹' },
+    { a: 'xun_yun', b: 'cao_cao', type: 'marriage', label: '荀恽娶曹操女安阳公主' },
+    { a: 'xun_can', b: 'cao_hong', type: 'marriage', label: '荀粲娶曹洪女' },
+
+    // ===== 曹魏卷 · B面 政治同盟 =====
+    { a: 'cao_cao', b: 'xun_yu', type: 'alliance', label: '荀彧为曹操谋主，奉迎天子都许' },
+    { a: 'cao_cao', b: 'xun_you', type: 'alliance', label: '荀攸为曹操军师，定河北、平荆州' },
+    { a: 'cao_cao', b: 'zhong_yao', type: 'alliance', label: '钟繇镇关中，为曹操西线后援' },
+    { a: 'cao_cao', b: 'xiahou_dun', type: 'alliance', label: '夏侯惇从曹操起兵，督诸军' },
+    { a: 'cao_cao', b: 'xiahou_yuan', type: 'alliance', label: '夏侯渊为曹操平关右' },
+    { a: 'cao_cao', b: 'cao_hong', type: 'alliance', label: '曹洪让马救曹操于荥阳' },
+    { a: 'cao_cao', b: 'cao_xiu', type: 'alliance', label: '曹操目曹休为「吾家千里驹」' },
+    { a: 'cao_cao', b: 'cao_zhen', type: 'alliance', label: '曹操养曹真为子，后为大将军' },
+    { a: 'cao_pi', b: 'cao_zhen', type: 'alliance', label: '曹真为魏文帝所倚，受遗诏辅政' },
+    { a: 'cao_pi', b: 'cao_xiu', type: 'alliance', label: '曹休为魏文帝所倚，镇扬州' },
+    { a: 'cao_rui', b: 'cao_zhen', type: 'alliance', label: '明帝时曹真拒诸葛亮于陈仓' },
+    { a: 'cao_shuang', b: 'xiahou_xuan', type: 'alliance', label: '夏侯玄与曹爽交好，为其腹心' },
+    { a: 'sima_yi', b: 'cao_pi', type: 'alliance', label: '司马懿为太子四友，佐曹丕定储' },
+    { a: 'sima_zhao', b: 'zhong_hui', type: 'alliance', label: '钟会为司马昭心腹，统军伐蜀' },
+    { a: 'xun_yi', b: 'sima_zhao', type: 'alliance', label: '荀顗佐司马氏代魏' },
+    { a: 'xun_xu', b: 'sima_zhao', type: 'alliance', label: '荀勖为司马昭大将军府所亲待' },
+    { a: 'lu_yu', b: 'cao_pi', type: 'alliance', label: '卢毓为魏文帝掌选举' },
+    { a: 'lu_qin', b: 'sima_zhao', type: 'alliance', label: '卢钦为司马昭所辟' },
+
+    // ===== 曹魏卷 · B面 对立 =====
+    { a: 'cao_cao', b: 'yuan_shao', type: 'conflict', label: '官渡之战，曹操破袁绍，河北易主' },
+    { a: 'cao_cao', b: 'yuan_shu', type: 'conflict', label: '曹操讨袁术，术败走呕血而卒' },
+    { a: 'cao_pi', b: 'cao_zhi', type: 'conflict', label: '储位之争，曹植失宠，终至迁徙' },
+    { a: 'xun_yu', b: 'cao_cao', type: 'conflict', label: '荀彧反对曹操进爵魏公，忧郁而卒' },
+    { a: 'cao_shuang', b: 'sima_yi', type: 'conflict', label: '高平陵之变，司马懿族诛曹爽' },
+    { a: 'sima_shi', b: 'xiahou_xuan', type: 'conflict', label: '司马师诛夏侯玄，夷其族' },
+    { a: 'yuan_shao', b: 'yuan_shu', type: 'conflict', label: '兄弟相攻，为曹操所乘' },
+    { a: 'xiahou_ba', b: 'sima_shi', type: 'conflict', label: '夏侯霸惧司马氏之祸，奔蜀' },
+
+    // ===== 曹魏卷 · B面 交游 =====
+    { a: 'cao_cao', b: 'yuan_shao', type: 'friend', label: '少相友善，同为西园八校尉' },
+
+    // ===== 曹魏卷 · B面 举荐 =====
+    { a: 'xun_yu', b: 'xun_you', type: 'recommend', label: '荀彧荐荀攸于曹操' },
+
+    // ===== 曹魏卷 · B面 家族格局 =====
+    { a: 'cao', b: 'xiahou', type: 'alliance', label: '曹、夏侯世为婚姻，同为谯沛集团核心' },
+    { a: 'cao', b: 'xun', type: 'alliance', label: '曹操倚荀彧、荀攸为谋主' },
+    { a: 'cao', b: 'zhong', type: 'alliance', label: '钟繇镇关中，为曹魏股肱' },
+    { a: 'cao', b: 'yuan', type: 'conflict', label: '官渡之战，曹操破袁绍' },
+    { a: 'cao', b: 'sima', type: 'conflict', label: '高平陵之变，司马氏夺曹魏权柄' },
+    { a: 'xun', b: 'yuan', type: 'conflict', label: '荀彧弃袁绍而归曹操' },
+    { a: 'lu', b: 'cao', type: 'alliance', label: '卢毓为魏室重臣，掌选举' },
+    { a: 'sima', b: 'zhong', type: 'alliance', label: '钟会为司马昭伐蜀，二族共谋' },
+    { a: 'sima', b: 'xiahou', type: 'conflict', label: '司马师诛夏侯玄，夏侯霸奔蜀' },
+
+    // ===== A面 · 血缘：琅琊王氏 =====
+    { a: 'wang_xiang', b: 'wang_lan', type: 'kin', label: '兄弟（异母，王览为祥异母弟）' },
+    { a: 'wang_lan', b: 'wang_dao', type: 'kin', label: '祖孙（王导为王览之孙）' },
+    { a: 'wang_lan', b: 'wang_dun', type: 'kin', label: '祖孙（王敦为王览之孙）' },
+    { a: 'wang_dao', b: 'wang_dun', type: 'kin', label: '从兄弟（同出王览）' },
+    { a: 'wang_dao', b: 'wang_yi', type: 'kin', label: '从兄弟' },
+    { a: 'wang_dao', b: 'wang_xizhi', type: 'kin', label: '从叔侄（王导为羲之从叔）' },
+    { a: 'wang_yi', b: 'wang_xizhi', type: 'kin', label: '叔侄（王廙为羲之叔父）' },
+    { a: 'wang_yan', b: 'wang_dao', type: 'kin', label: '族兄弟（同出琅琊王氏）' },
+    { a: 'wang_xizhi', b: 'wang_xianzhi', type: 'kin', label: '父子（献之为羲之第七子）' },
+    { a: 'wang_xizhi', b: 'wang_huizhi', type: 'kin', label: '父子（徽之为羲之第五子）' },
+    { a: 'wang_xizhi', b: 'wang_ningzhi', type: 'kin', label: '父子（凝之为羲之次子）' },
+    { a: 'wang_xianzhi', b: 'wang_huizhi', type: 'kin', label: '兄弟' },
+    { a: 'wang_xianzhi', b: 'wang_ningzhi', type: 'kin', label: '兄弟' },
+    { a: 'wang_huizhi', b: 'wang_ningzhi', type: 'kin', label: '兄弟' },
+    { a: 'wang_dao', b: 'wang_xun', type: 'kin', label: '祖孙（王珣为王导之孙）' },
+    { a: 'wang_xun', b: 'wang_gong', type: 'kin', label: '同族（并出琅琊王氏）' },
+    { a: 'wang_yi', b: 'sima_rui', type: 'kin', label: '姨表兄弟（王廙为元帝姨弟）' },
+
+    // ===== A面 · 血缘：太原王氏 =====
+    { a: 'wang_yun', b: 'wang_ling', type: 'kin', label: '叔侄（王凌为王允之侄）' },
+    { a: 'wang_chang', b: 'wang_hun', type: 'kin', label: '父子' },
+    { a: 'wang_hun', b: 'wang_ji', type: 'kin', label: '父子' },
+    { a: 'wang_hun', b: 'wang_cheng', type: 'kin', label: '叔侄（王承为王浑之侄）' },
+    { a: 'wang_cheng', b: 'wang_shu', type: 'kin', label: '父子' },
+    { a: 'wang_shu', b: 'wang_tanzhi', type: 'kin', label: '父子' },
+    { a: 'wang_tanzhi', b: 'wang_guobao', type: 'kin', label: '父子' },
+    { a: 'wang_tanzhi', b: 'wang_chen', type: 'kin', label: '父子' },
+    { a: 'wang_guobao', b: 'wang_chen', type: 'kin', label: '兄弟' },
+    { a: 'wang_ji', b: 'wang_cheng', type: 'kin', label: '从兄弟' },
+
+    // ===== A面 · 血缘：陈郡谢氏 =====
+    { a: 'xie_heng', b: 'xie_kun', type: 'kin', label: '父子' },
+    { a: 'xie_heng', b: 'xie_pou', type: 'kin', label: '父子' },
+    { a: 'xie_kun', b: 'xie_pou', type: 'kin', label: '兄弟' },
+    { a: 'xie_kun', b: 'xie_shang', type: 'kin', label: '父子' },
+    { a: 'xie_pou', b: 'xie_yi', type: 'kin', label: '父子' },
+    { a: 'xie_pou', b: 'xie_wan', type: 'kin', label: '父子' },
+    { a: 'xie_pou', b: 'xie_an', type: 'kin', label: '父子' },
+    { a: 'xie_pou', b: 'xie_shi', type: 'kin', label: '父子' },
+    { a: 'xie_yi', b: 'xie_xuan', type: 'kin', label: '父子' },
+    { a: 'xie_yi', b: 'xie_daoyun', type: 'kin', label: '父女' },
+    { a: 'xie_an', b: 'xie_yan', type: 'kin', label: '父子' },
+    { a: 'xie_yan', b: 'xie_hun', type: 'kin', label: '父子' },
+    { a: 'xie_shang', b: 'xie_an', type: 'kin', label: '从兄弟（尚为安从兄）' },
+    { a: 'xie_xuan', b: 'xie_yan', type: 'kin', label: '从兄弟' },
+    { a: 'xie_xuan', b: 'xie_daoyun', type: 'kin', label: '兄妹' },
+    { a: 'xie_yi', b: 'xie_an', type: 'kin', label: '兄弟' },
+    { a: 'xie_an', b: 'xie_shi', type: 'kin', label: '兄弟' },
+    { a: 'xie_an', b: 'xie_wan', type: 'kin', label: '兄弟' },
+
+    // ===== A面 · 血缘：谯国桓氏 =====
+    { a: 'huan_fan', b: 'huan_yi_', type: 'kin', label: '同族（桓范为桓氏先辈名臣）' },
+    { a: 'huan_yi_', b: 'huan_wen', type: 'kin', label: '父子' },
+    { a: 'huan_yi_', b: 'huan_huo', type: 'kin', label: '父子' },
+    { a: 'huan_yi_', b: 'huan_chong', type: 'kin', label: '父子' },
+    { a: 'huan_wen', b: 'huan_huo', type: 'kin', label: '兄弟' },
+    { a: 'huan_wen', b: 'huan_chong', type: 'kin', label: '兄弟' },
+    { a: 'huan_huo', b: 'huan_shiqian', type: 'kin', label: '父子' },
+    { a: 'huan_huo', b: 'huan_shimin', type: 'kin', label: '父子' },
+    { a: 'huan_wen', b: 'huan_xuan', type: 'kin', label: '父子' },
+    { a: 'huan_chong', b: 'huan_qian', type: 'kin', label: '父子' },
+    { a: 'huan_shiqian', b: 'huan_shimin', type: 'kin', label: '兄弟' },
+    { a: 'huan_xuan', b: 'huan_qian', type: 'kin', label: '从兄弟' },
+    { a: 'huan_yi', b: 'huan_wen', type: 'kin', label: '同族（铚县、龙亢两支）' },
+
+    // ===== A面 · 血缘：河内司马氏 =====
+    { a: 'sima_yi', b: 'sima_shi', type: 'kin', label: '父子' },
+    { a: 'sima_yi', b: 'sima_zhao', type: 'kin', label: '父子' },
+    { a: 'sima_shi', b: 'sima_zhao', type: 'kin', label: '兄弟' },
+    { a: 'sima_zhao', b: 'sima_yan', type: 'kin', label: '父子' },
+    { a: 'sima_yan', b: 'sima_zhong', type: 'kin', label: '父子' },
+    { a: 'sima_yan', b: 'sima_yue', type: 'kin', label: '再从兄弟（同出司马懿、司马馗）' },
+    { a: 'sima_yi', b: 'sima_zhou', type: 'kin', label: '父子（伷为懿第五子）' },
+    { a: 'sima_zhou', b: 'sima_jin', type: 'kin', label: '父子' },
+    { a: 'sima_jin', b: 'sima_rui', type: 'kin', label: '父子' },
+    { a: 'sima_shi', b: 'sima_zhou', type: 'kin', label: '兄弟（异母，伷为师弟）' },
+    { a: 'sima_zhao', b: 'sima_zhou', type: 'kin', label: '兄弟（异母，伷为昭弟）' },
+    { a: 'sima_zhou', b: 'sima_yan', type: 'kin', label: '叔侄（伷为炎叔父）' },
+    { a: 'sima_yan', b: 'sima_rui', type: 'kin', label: '从叔侄（炎为睿从叔）' },
+    { a: 'sima_rui', b: 'sima_shao', type: 'kin', label: '父子' },
+    { a: 'sima_rui', b: 'sima_yu', type: 'kin', label: '父子' },
+    { a: 'sima_shao', b: 'sima_yan2', type: 'kin', label: '父子' },
+    { a: 'sima_yu', b: 'sima_yao', type: 'kin', label: '父子' },
+    { a: 'sima_yao', b: 'sima_daozi', type: 'kin', label: '兄弟' },
+    { a: 'sima_daozi', b: 'sima_yuanxian', type: 'kin', label: '父子' },
+    { a: 'sima_yao', b: 'sima_dezong', type: 'kin', label: '父子' },
+    { a: 'sima_shao', b: 'sima_yu', type: 'kin', label: '兄弟（异母）' },
+    { a: 'sima_zhong', b: 'sima_yue', type: 'kin', label: '族叔侄（越为衷族叔）' },
+
+    // ===== A面 · 血缘：颍川庾氏 =====
+    { a: 'yu_liang', b: 'yu_bing', type: 'kin', label: '兄弟' },
+    { a: 'yu_liang', b: 'yu_yi', type: 'kin', label: '兄弟' },
+    { a: 'yu_liang', b: 'yu_wenjun', type: 'kin', label: '兄妹' },
+    { a: 'yu_bing', b: 'yu_yi', type: 'kin', label: '兄弟' },
+    { a: 'yu_bing', b: 'yu_kai', type: 'kin', label: '父子' },
+
+    // ===== A面 · 血缘：泰山羊氏 =====
+    { a: 'yang_xu', b: 'yang_dao', type: 'kin', label: '父子' },
+    { a: 'yang_dao', b: 'yang_hu', type: 'kin', label: '父子' },
+    { a: 'yang_dao', b: 'yang_huiyu', type: 'kin', label: '父女' },
+    { a: 'yang_dao', b: 'yang_dan', type: 'kin', label: '兄弟' },
+    { a: 'yang_dan', b: 'yang_xiu', type: 'kin', label: '父子' },
+    { a: 'yang_hu', b: 'yang_huiyu', type: 'kin', label: '姊弟（同出蔡邕之女）' },
+    { a: 'yang_hu', b: 'yang_xiu', type: 'kin', label: '从兄弟' },
+    { a: 'yang_huiyu', b: 'yang_xiu', type: 'kin', label: '从姊弟' },
+    { a: 'yang_xuanzhi', b: 'yang_xianrong', type: 'kin', label: '父女' },
+    { a: 'yang_hu', b: 'yang_xuanzhi', type: 'kin', label: '同族（世系失考，同为泰山南城羊氏）' },
+
+    // ===== A面 · 姻亲 =====
+    { a: 'wang_ningzhi', b: 'xie_daoyun', type: 'marriage', label: '王谢联姻：道韫适凝之' },
+    { a: 'wang_xianzhi', b: 'sima_yu', type: 'marriage', label: '献之尚新安公主（简文帝女）' },
+    { a: 'wang_gong', b: 'sima_yao', type: 'marriage', label: '王恭妹王法慧为孝武帝皇后' },
+    { a: 'huan_wen', b: 'sima_shao', type: 'marriage', label: '桓温尚南康长公主（明帝女）' },
+    { a: 'xie_hun', b: 'sima_yao', type: 'marriage', label: '谢混尚晋陵公主（孝武帝女）' },
+    { a: 'yu_wenjun', b: 'sima_shao', type: 'marriage', label: '庾文君为明帝皇后' },
+    { a: 'wang_ji', b: 'sima_yan', type: 'marriage', label: '王济尚武帝女常山公主' },
+    { a: 'wang_guobao', b: 'xie_an', type: 'marriage', label: '王国宝娶谢安女' },
+    { a: 'yang_huiyu', b: 'sima_shi', type: 'marriage', label: '羊徽瑜为司马师继室（景献皇后）' },
+    { a: 'yang_xianrong', b: 'sima_zhong', type: 'marriage', label: '羊献容为晋惠帝皇后' },
+
+    // ===== B面 · 政治同盟 =====
+    { a: 'wang_dao', b: 'sima_rui', type: 'alliance', label: '王导定「镇之以静」之策，辅司马睿称帝建康' },
+    { a: 'wang_dao', b: 'wang_dun', type: 'alliance', label: '一居中枢、一握上流，兄弟共撑门阀权柄' },
+    { a: 'wang_xun', b: 'sima_yao', type: 'alliance', label: '王珣为孝武帝亲信，参预机要，共制司马道子' },
+    { a: 'wang_tanzhi', b: 'xie_an', type: 'alliance', label: '简文帝遗诏，王坦之与谢安同受顾命' },
+    { a: 'xie_an', b: 'sima_yao', type: 'alliance', label: '谢安辅孝武帝，总揽淝水战事' },
+    { a: 'xie_shi', b: 'xie_xuan', type: 'alliance', label: '谢石为征讨大都督，谢玄为前锋，共统北府兵' },
+    { a: 'xie_xuan', b: 'xie_yan', type: 'alliance', label: '淝水之战谢玄、谢琰同率前锋破敌' },
+    { a: 'xie_xuan', b: 'huan_chong', type: 'alliance', label: '淝水之战桓冲镇荆州，与谢玄东西策应' },
+    { a: 'huan_yi', b: 'xie_xuan', type: 'alliance', label: '淝水之战桓伊与谢玄、谢琰共破苻坚' },
+    { a: 'wang_guobao', b: 'sima_daozi', type: 'alliance', label: '王国宝党附司马道子，为其腹心，专擅朝政' },
+    { a: 'yu_liang', b: 'sima_shao', type: 'alliance', label: '庾亮为明帝亲信，预平王敦之乱' },
+    { a: 'yu_bing', b: 'sima_yan2', type: 'alliance', label: '成帝时庾冰入中书监，与王导共辅朝政' },
+    { a: 'yu_kai', b: 'wang_gong', type: 'alliance', label: '庾楷与王恭联兵讨王国宝' },
+    { a: 'yu_kai', b: 'huan_xuan', type: 'alliance', label: '庾楷附桓玄，为玄东下之前驱' },
+    { a: 'wang_yan', b: 'sima_yue', type: 'alliance', label: '王衍为东海王司马越谋主，共撑西晋残局' },
+    { a: 'wang_hun', b: 'sima_yan', type: 'alliance', label: '王浑为平吴主帅之一，镇寿春，以功进爵' },
+    { a: 'wang_xiang', b: 'sima_yan', type: 'alliance', label: '王祥入晋拜太保，为武帝所礼' },
+    { a: 'wang_cheng', b: 'sima_rui', type: 'alliance', label: '王承渡江，为司马睿镇东府所礼' },
+    { a: 'huan_shiqian', b: 'huan_wen', type: 'alliance', label: '桓石虔随桓温北伐，勇冠三军' },
+    { a: 'yang_hu', b: 'sima_yan', type: 'alliance', label: '羊祜镇襄阳，为武帝定灭吴之策' },
+    { a: 'yang_xiu', b: 'sima_yan', type: 'alliance', label: '羊琇少与司马炎亲狎，助其定储位' },
+
+    // ===== B面 · 对立 =====
+    { a: 'huan_wen', b: 'xie_an', type: 'conflict', label: '桓温入朝欲诛执政，谢安从容周旋，终使其无功而返' },
+    { a: 'huan_wen', b: 'wang_tanzhi', type: 'conflict', label: '简文帝遗诏事，王坦之与谢安共拒桓温' },
+    { a: 'wang_dao', b: 'yu_liang', type: 'conflict', label: '成帝初年王导、庾亮同受顾命，政见相左，形成王庾之争' },
+    { a: 'wang_dun', b: 'sima_rui', type: 'conflict', label: '永昌元年王敦以清君侧为名起兵，攻入建康' },
+    { a: 'wang_guobao', b: 'wang_gong', type: 'conflict', label: '孝武帝崩后，王恭以讨王国宝为名起兵' },
+    { a: 'wang_guobao', b: 'xie_an', type: 'conflict', label: '谢安恶国宝为人，抑而不用，国宝遂怨望' },
+    { a: 'huan_wen', b: 'sima_yu', type: 'conflict', label: '桓温废海西公、立简文帝，专擅朝政' },
+    { a: 'huan_xuan', b: 'sima_daozi', type: 'conflict', label: '桓玄据荆州，与司马道子父子对抗' },
+    { a: 'huan_xuan', b: 'sima_yuanxian', type: 'conflict', label: '元兴元年桓玄举兵东下，诛司马元显' },
+    { a: 'huan_xuan', b: 'sima_dezong', type: 'conflict', label: '桓玄废安帝，篡晋建楚' },
+    { a: 'wang_gong', b: 'sima_daozi', type: 'conflict', label: '王恭两度起兵，以讨司马道子、王国宝为名' },
+    { a: 'huan_fan', b: 'sima_yi', type: 'conflict', label: '高平陵之变，桓范劝曹爽奉天子幸许昌，事败被族诛' },
+    { a: 'wang_ling', b: 'sima_yi', type: 'conflict', label: '王凌谋立楚王曹彪，司马懿讨之，凌自尽' },
+    { a: 'wang_dao', b: 'wang_dun', type: 'conflict', label: '王敦举兵，王导率子弟待罪阙下，兄弟终至殊途' },
+
+    // ===== B面 · 举荐 / 交游 =====
+    { a: 'xie_an', b: 'xie_xuan', type: 'recommend', label: '谢安举谢玄监江北诸军事，组建北府兵' },
+    { a: 'yu_liang', b: 'wang_xizhi', type: 'recommend', label: '庾亮辟羲之为征西府参军，迁长史' },
+    { a: 'xie_an', b: 'wang_xizhi', type: 'friend', label: '兰亭雅集同游，王谢交谊之代表' },
+    { a: 'huan_yi', b: 'wang_huizhi', type: 'friend', label: '王徽之闻桓伊善笛，请于青溪侧，伊为奏三调而去' },
+
+    // ===== B面 · 家族格局 =====
+    { a: 'langya_wang', b: 'sima', type: 'alliance', label: '王与马，共天下：王氏辅佐司马睿建立东晋' },
+    { a: 'langya_wang', b: 'chenjun_xie', type: 'alliance', label: '王谢并称，累世通婚，共为江左门阀之首' },
+    { a: 'langya_wang', b: 'taiyuan_wang', type: 'conflict', label: '东晋末王恭（琅琊）与王国宝（太原）交兵，两王相争' },
+    { a: 'chenjun_xie', b: 'qiaoguo_huan', type: 'conflict', label: '谢安与桓温抗衡；谢氏执政后桓氏失势' },
+    { a: 'qiaoguo_huan', b: 'sima', type: 'conflict', label: '桓温废立、桓玄篡晋，桓氏与皇权终至决裂' },
+    { a: 'yingchuan_yu', b: 'langya_wang', type: 'conflict', label: '庾亮与王导争权，成帝朝形成王、庾对峙' },
+    { a: 'taiyuan_wang', b: 'sima', type: 'alliance', label: '王国宝党附司马道子，太原王氏依附宗室以固宠' },
+    { a: 'chenjun_xie', b: 'sima', type: 'alliance', label: '谢安辅孝武帝，淝水战后谢氏功高，为皇权所忌' },
+    { a: 'qiaoguo_huan', b: 'taiyuan_wang', type: 'conflict', label: '桓温入朝，王坦之与谢安共拒之' }
+  ];
+
+  // ==================== DATA END ====================
+
+  const TYPE = {
+    kin:       { name: '血缘', color: '#8B6F47', dash: [] },
+    marriage:  { name: '姻亲', color: '#B85450', dash: [4, 3] },
+    alliance:  { name: '政治同盟', color: '#5B7FA5', dash: [] },
+    conflict:  { name: '对立', color: '#B8973A', dash: [8, 5] },
+    recommend: { name: '举荐/师承', color: '#7E9F7A', dash: [2, 3] },
+    friend:    { name: '交游', color: '#7B6B9E', dash: [6, 3] },
+    tie:       { name: '家族归属', color: '#C4B29D', dash: [] }
+  };
+
+  // A面：血缘与姻亲；B面：交游与政治
+  const FACE_OF = { kin: 'a', marriage: 'a', alliance: 'b', conflict: 'b', recommend: 'b', friend: 'b' };
+  const FACE_LABEL = { a: 'A面 · 亲缘', b: 'B面 · 交游政治' };
+
+  const FAMILY_NAME = {};
+  const FAMILY_COLOR = {};
+  FAMILIES.forEach(f => { FAMILY_NAME[f.id] = f.name; FAMILY_COLOR[f.id] = f.color; });
+
+  // ---------- DOM ----------
+  const canvas = document.getElementById('graph');
+  const ctx = canvas.getContext('2d');
+  const wrap = canvas.parentElement;
+  const panel = document.getElementById('detailPanel');
+  const detailContent = document.getElementById('detailContent');
+  const tooltip = document.getElementById('tooltip');
+  const searchInput = document.getElementById('search');
+  const searchCount = document.getElementById('searchCount');
+  const legendEl = document.getElementById('legend');
+  const filtersEl = document.getElementById('filters');
+  const faceSwitch = document.getElementById('faceSwitch');
+  const eraBar = document.getElementById('eraBar');
+  const subtitle = document.getElementById('subtitle');
+
+  // ---------- state ----------
+  let W = 800, H = 600, dpr = 1;
+  let nodes = [];
+  let links = [];
+  let nodeById = new Map();
+  const view = { zoom: 1, x: 0, y: 0 };
+  let hoverNode = null, hoverLink = null, selected = null;
+  let dragging = null, panning = false, moved = false;
+  let lastMouse = { x: 0, y: 0 };
+  let downAt = { x: 0, y: 0 };
+  let focusFamily = null;
+  let face = 'a';
+  let era = 'wei';
+  let matches = new Set();
+  let qaHits = new Set();
+  let qaTreeHits = new Set();
+  let qaTreeFam = null;
+  let needsRelax = false, relaxBudget = 0;
+
+  // ---------- utils ----------
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+  function eraList(x) {
+    if (Array.isArray(x.era)) return x.era;
+    if (typeof x.era === 'string') return [x.era];
+    return ['jin'];
+  }
+  function eraHas(x, e) {
+    return eraList(x).indexOf(e) !== -1;
+  }
+  function yearOf(v) {
+    const n = parseInt(String(v == null ? '' : v).replace(/[^0-9]/g, ''), 10);
+    return isNaN(n) ? 9999 : n;
+  }
+  function lighten(hex, pct) {
+    let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    r = Math.min(255, r + Math.round((255 - r) * pct / 100));
+    g = Math.min(255, g + Math.round((255 - g) * pct / 100));
+    b = Math.min(255, b + Math.round((255 - b) * pct / 100));
+    return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+  }
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // ---------- build ----------
+  // 椭圆等弧长取点：扁椭圆上等角度会让长轴两端过密，故按弧长均分
+  function ellipseSlots(count, rx, ry) {
+    const steps = 720;
+    const cum = [0];
+    let total = 0;
+    for (let i = 1; i <= steps; i++) {
+      const t0 = -Math.PI / 2 + (i - 1) / steps * Math.PI * 2;
+      const t1 = -Math.PI / 2 + i / steps * Math.PI * 2;
+      total += Math.hypot(
+        (Math.cos(t1) - Math.cos(t0)) * rx,
+        (Math.sin(t1) - Math.sin(t0)) * ry
+      );
+      cum.push(total);
+    }
+    const out = [];
+    for (let k = 0; k < count; k++) {
+      const target = total * k / count;
+      let lo = 0, hi = steps;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (cum[mid] < target) lo = mid + 1; else hi = mid;
+      }
+      out.push(-Math.PI / 2 + (lo / steps) * Math.PI * 2);
+    }
+    return out;
+  }
+
+  // 判断一条血缘关系是否为「父 → 子」的世系连线（父子/父女/养父子/祖孙/曾祖孙）
+  function isDescentLabel(label) {
+    const s = String(label || '');
+    return /^(养|族|继)?父(子|女)/.test(s) || /祖孙|曾祖孙/.test(s);
+  }
+
+  function buildGraph() {
+    nodes = []; links = []; nodeById.clear();
+
+    const cx = W / 2, cy = H / 2;
+    const rx = W * 0.40, ry = H * 0.35;
+    const fams = FAMILIES.filter(f => eraHas(f, era));
+    const famIds = new Set(fams.map(f => f.id));
+    const scope = PEOPLE.filter(p => eraHas(p, era) && famIds.has(p.family));
+    const slots = ellipseSlots(fams.length, rx, ry);
+    const byFamily = new Map();
+    scope.forEach(p => {
+      if (!byFamily.has(p.family)) byFamily.set(p.family, []);
+      byFamily.get(p.family).push(p);
+    });
+
+    fams.forEach((f, fi) => {
+      const ang = slots[fi];
+      const fx = cx + Math.cos(ang) * rx;
+      const fy = cy + Math.sin(ang) * ry;
+      const fnode = {
+        kind: 'family', id: f.id, name: f.name, color: f.color, seat: f.seat, era: f.eraLabel || '',
+        desc: f.desc, highlights: f.highlights,
+        x: fx, y: fy, ax: fx, ay: fy, r: 34, fixed: true
+      };
+      nodes.push(fnode);
+      nodeById.set(fnode.id, fnode);
+
+      const members = (byFamily.get(f.id) || []).slice().sort((p, q) =>
+        (p.gen - q.gen) || (yearOf(p.born) - yearOf(q.born)) || (p.name < q.name ? -1 : 1)
+      );
+      const ring1Count = Math.min(members.length, 5);
+      const ring2Count = members.length - ring1Count;
+
+      members.forEach((p, i) => {
+        let dist, a;
+        const phase = fi * 0.55;
+        if (i < ring1Count) {
+          dist = 62;
+          a = ang + (i / ring1Count) * Math.PI * 2 + phase;
+        } else {
+          const k = i - ring1Count;
+          dist = 106;
+          a = ang + ((k + 0.5) / Math.max(ring2Count, 1)) * Math.PI * 2 + phase;
+        }
+        const px = fx + Math.cos(a) * dist;
+        const py = fy + Math.sin(a) * dist;
+        const len = p.name.length;
+        const r = len >= 4 ? 20 : (len === 3 ? 18 : 15.5);
+        const node = {
+          kind: 'person', id: p.id, name: p.name, zi: p.zi, born: p.born, died: p.died,
+          title: p.title, desc: p.desc, source: p.source, family: p.family, gen: p.gen,
+          x: px, y: py, ax: px, ay: py, r, fixed: false
+        };
+        nodes.push(node);
+        nodeById.set(node.id, node);
+      });
+    });
+
+    RELATIONS.forEach(rel => {
+      const s = nodeById.get(rel.a), t = nodeById.get(rel.b);
+      if (!s || !t) return;
+      links.push({ source: s, target: t, type: rel.type, label: rel.label || '', bend: 0 });
+    });
+
+    scope.forEach(p => {
+      const person = nodeById.get(p.id);
+      const fam = nodeById.get(p.family);
+      if (person && fam) {
+        links.push({ source: person, target: fam, type: 'tie', label: fam.name + '成员', bend: 0 });
+      }
+    });
+
+    // 同一对节点之间的多重关系，用弧度错开
+    const groups = new Map();
+    links.forEach(l => {
+      const key = [l.source.id, l.target.id].sort().join('|');
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(l);
+    });
+    groups.forEach(arr => {
+      if (arr.length < 2) return;
+      arr.forEach((l, i) => { l.bend = (i - (arr.length - 1) / 2) * 30; });
+    });
+  }
+
+  // ---------- layout ----------
+  const LINK_LEN = { kin: 92, marriage: 130 };
+
+  function relax(iterations) {
+    const n = nodes.length;
+    let maxMove = 0;
+    for (let it = 0; it < iterations; it++) {
+      const snap = new Array(n);
+      for (let i = 0; i < n; i++) snap[i] = { x: nodes[i].x, y: nodes[i].y };
+
+      for (let i = 0; i < n; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < n; j++) {
+          const b = nodes[j];
+          let dx = b.x - a.x, dy = b.y - a.y;
+          let d2 = dx * dx + dy * dy;
+          if (d2 < 0.0001) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = dx * dx + dy * dy; }
+          const d = Math.sqrt(d2);
+          const min = a.r + b.r + 9;
+          if (d < min) {
+            const push = (min - d) * 0.42;
+            const ux = dx / d, uy = dy / d;
+            if (!a.fixed) { a.x -= ux * push; a.y -= uy * push; }
+            if (!b.fixed) { b.x += ux * push; b.y += uy * push; }
+          }
+        }
+      }
+
+      for (let i = 0; i < links.length; i++) {
+        const l = links[i];
+        if (l.type === 'tie') continue;
+        const s = l.source, t = l.target;
+        let dx = t.x - s.x, dy = t.y - s.y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1;
+        const ideal = LINK_LEN[l.type] || 130;
+        const k = (s.family && s.family === t.family) ? 0.012 : 0.0007;
+        const f = (d - ideal) / d * k;
+        const fx = dx * f, fy = dy * f;
+        if (!s.fixed) { s.x += fx; s.y += fy; }
+        if (!t.fixed) { t.x -= fx; t.y -= fy; }
+      }
+
+      // 环向约束：族人始终挂在家族节点周围的环上，簇不会被连线拉塌
+      for (let i = 0; i < n; i++) {
+        const nd = nodes[i];
+        if (nd.fixed || nd.kind !== 'person' || !nd.ring) continue;
+        const hub = nodeById.get(nd.family);
+        if (!hub) continue;
+        const dx = nd.x - hub.x, dy = nd.y - hub.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const f = (d - nd.ring) * 0.09;
+        nd.x -= dx / d * f;
+        nd.y -= dy / d * f;
+      }
+
+      for (let i = 0; i < n; i++) {
+        const nd = nodes[i];
+        if (nd.fixed) continue;
+        nd.x += (nd.ax - nd.x) * 0.06;
+        nd.y += (nd.ay - nd.y) * 0.06;
+      }
+
+      let m = 0;
+      for (let i = 0; i < n; i++) {
+        m = Math.max(m, Math.abs(nodes[i].x - snap[i].x), Math.abs(nodes[i].y - snap[i].y));
+      }
+      maxMove = m;
+    }
+    return maxMove;
+  }
+
+  function fitView() {
+    if (!nodes.length) return;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    nodes.forEach(nd => {
+      minX = Math.min(minX, nd.x - nd.r - 26);
+      maxX = Math.max(maxX, nd.x + nd.r + 26);
+      minY = Math.min(minY, nd.y - nd.r - 22);
+      maxY = Math.max(maxY, nd.y + nd.r + 22);
+    });
+    const bw = Math.max(maxX - minX, 1), bh = Math.max(maxY - minY, 1);
+    const z = Math.max(0.3, Math.min(1.5, Math.min((W - 48) / bw, (H - 48) / bh)));
+    view.zoom = z;
+    view.x = (W - bw * z) / 2 - minX * z;
+    view.y = (H - bh * z) / 2 - minY * z;
+  }
+
+  function kickLayout(iterations) {
+    needsRelax = true;
+    relaxBudget = Math.max(relaxBudget, iterations || 200);
+  }
+
+  // ---------- focus helpers ----------
+  function computeFocusSet() {
+    if (!focusFamily) return null;
+    const set = new Set([focusFamily]);
+    nodes.forEach(n => { if (n.kind === 'person' && n.family === focusFamily) set.add(n.id); });
+    const snapshot = Array.from(set);
+    snapshot.forEach(id => {
+      links.forEach(l => {
+        if (l.type === 'tie' || FACE_OF[l.type] !== face) return;
+        if (l.source.id === id && l.target.kind === 'person') set.add(l.target.id);
+        if (l.target.id === id && l.source.kind === 'person') set.add(l.source.id);
+      });
+    });
+    Array.from(set).forEach(id => {
+      const nd = nodeById.get(id);
+      if (nd && nd.kind === 'person') set.add(nd.family);
+    });
+    return set;
+  }
+
+  function neighborhoodIds(node) {
+    const set = new Set([node.id]);
+    if (node.kind === 'person') set.add(node.family);
+    if (node.kind === 'family') nodes.forEach(n => { if (n.kind === 'person' && n.family === node.id) set.add(n.id); });
+    links.forEach(l => {
+      if (l.type === 'tie' || FACE_OF[l.type] !== face) return;
+      if (l.source === node) set.add(l.target.id);
+      if (l.target === node) set.add(l.source.id);
+    });
+    return set;
+  }
+
+  // ---------- drawing ----------
+  function controlPoint(l) {
+    const sx = l.source.x, sy = l.source.y, tx = l.target.x, ty = l.target.y;
+    let cx = (sx + tx) / 2, cy = (sy + ty) / 2;
+    if (l.bend) {
+      const dx = tx - sx, dy = ty - sy;
+      const len = Math.hypot(dx, dy) || 1;
+      cx += (-dy / len) * l.bend;
+      cy += (dx / len) * l.bend;
+    }
+    return { x: cx, y: cy };
+  }
+
+  function pointOnCurve(l, t) {
+    const c = controlPoint(l);
+    const mt = 1 - t;
+    return {
+      x: mt * mt * l.source.x + 2 * mt * t * c.x + t * t * l.target.x,
+      y: mt * mt * l.source.y + 2 * mt * t * c.y + t * t * l.target.y
+    };
+  }
+
+  // 所有连线统一为二次贝塞尔，取点与渲染保持同一套几何
+  function pointOnLink(l, t) {
+    return pointOnCurve(l, t);
+  }
+
+  function drawNodeText(text, fontSize, weight, color) {
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const chars = Array.from(text);
+    if (chars.length <= 3) {
+      ctx.font = weight + ' ' + fontSize + 'px "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif';
+      ctx.fillText(text, 0, 0.5);
+    } else {
+      const mid = chars.length === 5 ? 2 : Math.ceil(chars.length / 2);
+      ctx.font = weight + ' ' + (fontSize - 1) + 'px "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif';
+      const lh = fontSize * 0.58;
+      ctx.fillText(chars.slice(0, mid).join(''), 0, -lh);
+      ctx.fillText(chars.slice(mid).join(''), 0, lh);
+    }
+  }
+
+  function wrapLabel(text, max) {
+    const out = [];
+    for (let i = 0; i < text.length; i += max) out.push(text.slice(i, i + max));
+    return out;
+  }
+
+  function drawEdgeLabel(l) {
+    if (!l.label) return;
+    const p = pointOnLink(l, 0.5);
+    const lines = wrapLabel(l.label, 22);
+    const fs = 11;
+    ctx.save();
+    ctx.font = fs + 'px "Noto Serif SC", "Songti SC", serif';
+    let w = 0;
+    lines.forEach(s => { w = Math.max(w, ctx.measureText(s).width); });
+    const padX = 8, lh = 16;
+    const boxW = w + padX * 2, boxH = lines.length * lh + 9;
+    const x = p.x - boxW / 2, y = p.y - boxH / 2;
+    ctx.globalAlpha = 0.97;
+    ctx.fillStyle = 'rgba(255,249,241,0.97)';
+    ctx.strokeStyle = TYPE[l.type].color;
+    ctx.lineWidth = 1.1 / Math.max(view.zoom, 0.6);
+    roundRect(x, y, boxW, boxH, 5);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = TYPE[l.type].color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    lines.forEach((s, i) => {
+      ctx.fillText(s, p.x, y + 4.5 + lh / 2 + i * lh);
+    });
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    const focusSet = computeFocusSet();
+    const selSet = selected ? neighborhoodIds(selected) : null;
+    const hasMatch = matches.size > 0;
+
+    // 当前图面上有连线的节点；B面里只有亲缘关系的人物会淡出
+    const activeIds = new Set();
+    links.forEach(l => {
+      if (l.type === 'tie' || FACE_OF[l.type] !== face) return;
+      activeIds.add(l.source.id);
+      activeIds.add(l.target.id);
+    });
+
+    ctx.save();
+    ctx.translate(view.x, view.y);
+    ctx.scale(view.zoom, view.zoom);
+
+    const lineScale = 1 / Math.max(view.zoom, 0.6);
+
+    // ---- links ----
+    links.forEach(l => {
+      const isTie = l.type === 'tie';
+      if (!isTie && FACE_OF[l.type] !== face) return;
+      let alpha = isTie ? 0.5 : 1;
+      let width = isTie ? 1 : 1.5;
+
+      if (focusSet && !(focusSet.has(l.source.id) && focusSet.has(l.target.id))) alpha *= 0.1;
+      if (selSet && !(selSet.has(l.source.id) && selSet.has(l.target.id))) alpha *= 0.14;
+
+      const touchHover = hoverNode && (l.source === hoverNode || l.target === hoverNode);
+      if (touchHover) { alpha = Math.min(1, alpha + 0.5); width += 0.9; }
+      if (l === hoverLink) { alpha = 1; width += 1.2; }
+      if (qaHits.size) {
+        const inQA = qaHits.has(l.source.id) && qaHits.has(l.target.id);
+        if (!inQA) alpha *= 0.08;
+      }
+      if (qaHits.size && qaHits.has(l.source.id) && qaHits.has(l.target.id)) {
+        alpha = Math.min(1, alpha + 0.35);
+        width += 0.6;
+      }
+
+      if (alpha <= 0.02) return;
+
+      const c = controlPoint(l);
+      ctx.globalAlpha = Math.min(1, alpha);
+      ctx.strokeStyle = TYPE[l.type].color;
+      ctx.lineWidth = width * lineScale;
+      ctx.setLineDash(TYPE[l.type].dash.map(v => v * lineScale));
+      ctx.beginPath();
+      ctx.moveTo(l.source.x, l.source.y);
+      ctx.quadraticCurveTo(c.x, c.y, l.target.x, l.target.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    if (hoverLink && hoverLink.type !== 'tie') drawEdgeLabel(hoverLink);
+    ctx.globalAlpha = 1;
+
+    // ---- nodes ----
+    nodes.forEach(nd => {
+      const isHover = hoverNode === nd;
+      const isSel = selected === nd;
+      let alpha = 1;
+      if (nd.kind === 'person' && !activeIds.has(nd.id)) alpha = 0.3;
+      if (focusSet && !focusSet.has(nd.id)) alpha = 0.13;
+      if (selSet && !selSet.has(nd.id)) alpha = Math.min(alpha, 0.2);
+      if (hasMatch && !matches.has(nd.id)) alpha = Math.min(alpha, 0.16);
+      if (hasMatch && matches.has(nd.id)) alpha = 1;
+      if (qaHits.size && !qaHits.has(nd.id)) alpha = Math.min(alpha, 0.10);
+      if (qaHits.size && qaHits.has(nd.id)) alpha = 1;
+      if (isHover || isSel) alpha = 1;
+      if (alpha <= 0.03) return;
+
+      const scale = isHover ? 1.12 : 1;
+
+      ctx.save();
+      ctx.translate(nd.x, nd.y);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = alpha;
+
+      if (nd.kind === 'family') {
+        const grad = ctx.createRadialGradient(-nd.r * 0.3, -nd.r * 0.35, nd.r * 0.12, 0, 0, nd.r);
+        grad.addColorStop(0, lighten(nd.color, 30));
+        grad.addColorStop(1, nd.color);
+        ctx.beginPath();
+        ctx.arc(0, 0, nd.r, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(60, 40, 25, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        drawNodeText(nd.name, 12.5, '700', '#FFF9F1');
+      } else {
+        const fc = FAMILY_COLOR[nd.family] || '#8B7662';
+        ctx.beginPath();
+        ctx.arc(0, 0, nd.r, 0, Math.PI * 2);
+        ctx.fillStyle = isHover ? lighten(fc, 45) : '#FFF9F1';
+        ctx.fill();
+        ctx.strokeStyle = fc;
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+        drawNodeText(nd.name, nd.name.length >= 4 ? 11 : (nd.name.length === 3 ? 11.5 : 13), '600', fc);
+      }
+
+      // 选中环
+      if (isSel) {
+        ctx.beginPath();
+        ctx.arc(0, 0, nd.r + 4.5, 0, Math.PI * 2);
+        ctx.strokeStyle = '#C96F3D';
+        ctx.lineWidth = 2.4;
+        ctx.setLineDash([]);
+        ctx.stroke();
+      }
+      if (qaHits.has(nd.id)) {
+        ctx.beginPath();
+        ctx.arc(0, 0, nd.r + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = '#C96F3D';
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([3, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      // 检索命中环
+      if (matches.has(nd.id)) {
+        ctx.beginPath();
+        ctx.arc(0, 0, nd.r + 7, 0, Math.PI * 2);
+        ctx.strokeStyle = '#B8973A';
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.restore();
+    });
+
+    ctx.restore();
+  }
+
+  // ---------- hit testing ----------
+  function toWorld(sx, sy) {
+    return { x: (sx - view.x) / view.zoom, y: (sy - view.y) / view.zoom };
+  }
+
+  function findNode(sx, sy) {
+    const p = toWorld(sx, sy);
+    const pad = 3 / view.zoom;
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      const n = nodes[i];
+      const dx = p.x - n.x, dy = p.y - n.y;
+      const rr = n.r + pad;
+      if (dx * dx + dy * dy <= rr * rr) return n;
+    }
+    return null;
+  }
+
+  function findLink(sx, sy) {
+    const p = toWorld(sx, sy);
+    const tol = 7 / view.zoom;
+    let best = null, bestD = Infinity;
+    links.forEach(l => {
+      if (l.type === 'tie' || FACE_OF[l.type] !== face) return;
+      let prev = { x: l.source.x, y: l.source.y };
+      for (let i = 1; i <= 12; i++) {
+        const q = pointOnLink(l, i / 12);
+        const dx = q.x - prev.x, dy = q.y - prev.y;
+        const len2 = dx * dx + dy * dy || 1;
+        let t = ((p.x - prev.x) * dx + (p.y - prev.y) * dy) / len2;
+        t = Math.max(0, Math.min(1, t));
+        const px = prev.x + dx * t, py = prev.y + dy * t;
+        const d = Math.hypot(p.x - px, p.y - py);
+        if (d < bestD) { bestD = d; best = l; }
+        prev = q;
+      }
+    });
+    return bestD <= tol ? best : null;
+  }
+
+  // ---------- detail panel ----------
+  function lifeText(n) {
+    if (n.born && n.died) return n.born + ' — ' + n.died;
+    if (n.born) return n.born + ' — ？';
+    if (n.died) return '？ — ' + n.died;
+    return '';
+  }
+
+  function section(title, body) {
+    return '<div class="detail-section"><h3>' + title + '</h3>' + body + '</div>';
+  }
+
+  function relItems(node, arr) {
+    return arr.map(l => {
+      const other = l.source === node ? l.target : l.source;
+      const t = TYPE[l.type] || TYPE.kin;
+      return '<li><span class="rel-type" style="color:' + t.color + '">' + t.name + '</span>' +
+        '<button class="link-btn" data-id="' + other.id + '">' + esc(other.name) + '</button>' +
+        (l.label ? '　' + esc(l.label) : '') + '</li>';
+    }).join('');
+  }
+
+  // 家族世系：侧栏里按「一代一行」排布，同辈同高，子侄居下一层
+  function familyTreeHTML(famId, hits) {
+    const hitSet = hits || null;
+    const color = FAMILY_COLOR[famId] || '#8B7662';
+    const members = PEOPLE.filter(p => p.family === famId && nodeById.has(p.id));
+    if (!members.length) return '';
+    const byId = new Map(members.map(p => [p.id, p]));
+
+    // 父系相承的边：决定子辈落在父辈正下方
+    const parentOf = new Map();
+    RELATIONS.forEach(r => {
+      if (!isDescentLabel(r.label)) return;
+      const a = byId.get(r.a), b = byId.get(r.b);
+      if (!a || !b || a.gen === b.gen) return;
+      const par = a.gen < b.gen ? a : b;
+      const ch = a.gen < b.gen ? b : a;
+      if (!parentOf.has(ch.id)) parentOf.set(ch.id, par.id);
+    });
+
+    // 叔侄等低一辈的旁系，用虚线补充
+    const unclePairs = [];
+    RELATIONS.forEach(r => {
+      if (r.type !== 'kin' || !/叔侄|从父子/.test(r.label || '')) return;
+      const a = byId.get(r.a), b = byId.get(r.b);
+      if (!a || !b || a.gen === b.gen) return;
+      const elder = a.gen < b.gen ? a : b;
+      const younger = a.gen < b.gen ? b : a;
+      unclePairs.push([elder.id, younger.id]);
+    });
+
+    const gens = Array.from(new Set(members.map(p => p.gen))).sort((a, b) => a - b);
+    const VW = 520, GUT = 34, PAD_R = 8, ROWH = 64, NH = 26, TOP = 24;
+    const contentW = VW - GUT - PAD_R;
+    const CN = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+    const nodeW = p => (p.name.length >= 4 ? 68 : (p.name.length === 3 ? 56 : 42));
+
+    const pos = new Map();
+    const rowY = new Map();
+    const rows = gens.map((g, gi) => {
+      const y = TOP + gi * ROWH;
+      rowY.set(g, y);
+      const sameRow = members.filter(p => p.gen === g);
+      const slot = contentW / Math.max(1, sameRow.length);
+
+      // 有父可依者排在父辈正下方，其余均分
+      const items = sameRow.map((p, i) => {
+        const pid = parentOf.get(p.id);
+        return { p, ideal: pid && pos.has(pid) ? pos.get(pid) : GUT + slot * (i + 0.5) };
+      });
+      items.sort((a, b) => (a.ideal - b.ideal) ||
+        (yearOf(a.p.born) - yearOf(b.p.born)) || (a.p.name < b.p.name ? -1 : 1));
+
+      let cursor = GUT;
+      items.forEach(it => {
+        const w = nodeW(it.p);
+        it.x = Math.max(cursor + w / 2, it.ideal);
+        cursor = it.x + w / 2 + 10;
+      });
+
+      // 右侧溢出则整体回收，再从右往左推一遍
+      const overflow = cursor - 10 - (VW - PAD_R);
+      if (overflow > 0) {
+        items.forEach(it => { it.x -= overflow; });
+        let right = VW - PAD_R;
+        for (let i = items.length - 1; i >= 0; i--) {
+          const w = nodeW(items[i].p);
+          items[i].x = Math.max(GUT + w / 2, Math.min(items[i].x, right - w / 2));
+          right = items[i].x - w / 2 - 10;
+        }
+      }
+
+      items.forEach(it => pos.set(it.p.id, it.x));
+      return { g, y, arr: items.map(it => it.p) };
+    });
+
+    const H2 = TOP + Math.max(0, rows.length - 1) * ROWH + NH / 2 + 14;
+    let s = '<svg viewBox="0 0 ' + VW + ' ' + H2 + '" role="img" aria-label="家族世系图">';
+
+    rows.forEach(r => {
+      s += '<line class="ft-guide" x1="' + GUT + '" y1="' + r.y + '" x2="' + (VW - PAD_R) + '" y2="' + r.y + '"/>';
+      s += '<text class="ft-gen-label" x="0" y="' + (r.y + 3.5) + '">' + (CN[r.g] || r.g) + '世</text>';
+    });
+
+    // 叔侄旁系：淡虚线
+    unclePairs.forEach(pair => {
+      const [pid, cid] = pair;
+      if (!pos.has(pid) || !pos.has(cid)) return;
+      const par = byId.get(pid);
+      const x1 = pos.get(pid), y1 = rowY.get(par.gen) + NH / 2 - 2;
+      const x2 = pos.get(cid), y2 = rowY.get(byId.get(cid).gen) - NH / 2 + 2;
+      const dy = Math.max(16, (y2 - y1) * 0.5);
+      const hitU = hitSet && hitSet.has(pid) && hitSet.has(cid);
+      s += '<path class="ft-edge ft-uncle' + (hitU ? ' ft-hit' : '') + '" stroke="' + color + '" d="M' +
+        x1.toFixed(1) + ' ' + y1.toFixed(1) + ' C' + x1.toFixed(1) + ' ' + (y1 + dy).toFixed(1) + ' ' +
+        x2.toFixed(1) + ' ' + (y2 - dy).toFixed(1) + ' ' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '"/>';
+    });
+
+    // 父系相承：实线
+    rows.forEach(r => {
+      r.arr.forEach(p => {
+        const pid = parentOf.get(p.id);
+        if (!pid || !pos.has(pid)) return;
+        const par = byId.get(pid);
+        const x1 = pos.get(pid), y1 = rowY.get(par.gen) + NH / 2 - 2;
+        const x2 = pos.get(p.id), y2 = rowY.get(p.gen) - NH / 2 + 2;
+        const dy = Math.max(16, (y2 - y1) * 0.5);
+        const hitP = hitSet && hitSet.has(pid) && hitSet.has(p.id);
+        s += '<path class="ft-edge ft-parent' + (hitP ? ' ft-hit' : '') + '" stroke="' + color + '" stroke-opacity="0.55" stroke-width="1.5" d="M' +
+          x1.toFixed(1) + ' ' + y1.toFixed(1) + ' C' + x1.toFixed(1) + ' ' + (y1 + dy).toFixed(1) + ' ' +
+          x2.toFixed(1) + ' ' + (y2 - dy).toFixed(1) + ' ' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '"/>';
+      });
+    });
+
+    rows.forEach(r => {
+      r.arr.forEach(p => {
+        const x = pos.get(p.id);
+        const len = p.name.length;
+        const w = len >= 4 ? 68 : (len === 3 ? 56 : 42);
+        const hitN = hitSet && hitSet.has(p.id);
+        s += '<g class="ft-node' + (hitN ? ' ft-hit' : '') + '" data-id="' + p.id + '">';
+        s += '<title>' + esc(p.name) + (p.zi ? '　字' + esc(p.zi) : '') + (p.title ? '　' + esc(p.title) : '') + '</title>';
+        s += '<rect x="' + (x - w / 2).toFixed(1) + '" y="' + (r.y - NH / 2) + '" width="' + w + '" height="' + NH +
+          '" rx="13" fill="#FFF9F1" stroke="' + color + '" stroke-width="1.2"/>';
+        s += '<text x="' + x.toFixed(1) + '" y="' + (r.y + 4) + '" text-anchor="middle" font-size="' +
+          (len >= 4 ? 10.5 : 11.5) + '" fill="#31251B">' + esc(p.name) + '</text>';
+        s += '</g>';
+      });
+    });
+
+    s += '</svg>';
+    return '<div class="family-tree' + (hitSet && hitSet.size ? ' has-hit' : '') + '">' + s + '</div>' +
+      '<div class="ft-note">共 ' + rows.length + ' 代 · ' + members.length + ' 位。同一横排为同辈，实线为父系相承，虚线为叔侄等低一辈旁系；点击姓名可查看其人。</div>';
+  }
+
+  function renderDetail(node) {
+    const isFam = node.kind === 'family';
+    const color = isFam ? node.color : (FAMILY_COLOR[node.family] || '#8B7662');
+    let html = '';
+
+    html += '<div class="detail-name">' + esc(node.name);
+    if (!isFam && node.zi) html += '<span class="detail-zi">字 ' + esc(node.zi) + '</span>';
+    html += '</div>';
+
+    html += '<button class="detail-family-tag" data-id="' + (isFam ? node.id : node.family) + '" style="background:' + color + '">' +
+      (isFam ? '门阀家族' : esc(FAMILY_NAME[node.family] || '')) + '</button>';
+    html += '<div class="face-note">当前图面：' + FACE_LABEL[face] + '</div>';
+
+    if (isFam) {
+      html += section('简介', '<p>' + esc(node.desc) + '</p>');
+      html += section('郡望', '<p>' + esc(node.seat) + '</p>');
+      html += section('活跃时期', '<p>' + esc(node.era) + '</p>');
+      const treeHits = (qaTreeFam === node.id && qaTreeHits.size) ? qaTreeHits : null;
+      html += section('家族世系', familyTreeHTML(node.id, treeHits));
+      if (node.highlights && node.highlights.length) {
+        html += section('家族要略', '<ul>' + node.highlights.map(h => '<li>' + esc(h) + '</li>').join('') + '</ul>');
+      }
+      const members = PEOPLE.filter(p => p.family === node.id && nodeById.has(p.id));
+
+      if (face === 'a') {
+        // 由族人的婚姻关系反推姻亲家族
+        const marrFams = [];
+        members.forEach(p => {
+          links.forEach(l => {
+            if (l.type !== 'marriage') return;
+            let other = null;
+            if (l.source.id === p.id) other = l.target;
+            else if (l.target.id === p.id) other = l.source;
+            if (other && other.kind === 'person' && other.family !== node.id && marrFams.indexOf(other.family) === -1) {
+              marrFams.push(other.family);
+            }
+          });
+        });
+        if (marrFams.length) {
+          html += section('姻亲家族',
+            '<div class="chips">' + marrFams.map(id =>
+              '<button class="chip" data-id="' + id + '" style="border-color:' + FAMILY_COLOR[id] + ';color:' + FAMILY_COLOR[id] + '">' + FAMILY_NAME[id] + '</button>'
+            ).join('') + '</div>');
+        } else {
+          html += section('姻亲家族', '<p class="family-lead">暂无可考的直接姻亲关系。</p>');
+        }
+      } else {
+        const famRels = links.filter(l => l.type !== 'tie' && FACE_OF[l.type] === face && (l.source === node || l.target === node));
+        if (famRels.length) {
+          html += section('对外格局', '<ul>' + relItems(node, famRels) + '</ul>');
+        } else {
+          html += section('对外格局', '<p class="family-lead">本面暂无家族层面的关系记录。</p>');
+        }
+      }
+    } else {
+      const life = lifeText(node);
+      if (life) html += section('生卒', '<p>' + esc(life) + '</p>');
+      if (node.title) html += section('官职', '<p>' + esc(node.title) + '</p>');
+      if (node.desc) html += section('简介', '<p>' + esc(node.desc) + '</p>');
+      if (node.source) html += section('史料', '<p class="family-lead">' + esc(node.source) + '</p>');
+
+      const rels = links.filter(l => l.type !== 'tie' && FACE_OF[l.type] === face && (l.source === node || l.target === node));
+
+      if (face === 'a') {
+        const kin = rels.filter(r => r.type === 'kin');
+        const marr = rels.filter(r => r.type === 'marriage');
+        if (kin.length) html += section('亲属', '<ul>' + relItems(node, kin) + '</ul>');
+        if (marr.length) html += section('姻亲', '<ul>' + relItems(node, marr) + '</ul>');
+        if (!rels.length) html += section('关系', '<p class="family-lead">本面暂无可考的血缘、姻亲记录。</p>');
+      } else {
+        const groups = [['alliance', '政治同盟'], ['conflict', '对立'], ['recommend', '举荐 / 师承'], ['friend', '交游']];
+        let printed = 0;
+        groups.forEach(g => {
+          const arr = rels.filter(r => r.type === g[0]);
+          if (arr.length) { html += section(g[1], '<ul>' + relItems(node, arr) + '</ul>'); printed += arr.length; }
+        });
+        if (!printed) html += section('关系', '<p class="family-lead">本面暂无交游、政治关系记录。</p>');
+      }
+    }
+
+    detailContent.innerHTML = html;
+    panel.classList.toggle('wide', isFam);
+    panel.classList.add('open');
+  }
+
+  function selectNode(node, center) {
+    if (!(node.kind === 'family' && qaTreeFam === node.id)) { qaTreeHits = new Set(); qaTreeFam = null; }
+    selected = node;
+    renderDetail(node);
+    panel.scrollTop = 0;
+    if (center) centerOn(node);
+  }
+
+  function centerOn(node) {
+    const z = Math.max(view.zoom, 0.95);
+    view.zoom = z;
+    // 右侧详情面板会遮住画布，目标点放在可见区偏左
+    view.x = W * 0.38 - node.x * z;
+    view.y = H / 2 - node.y * z;
+  }
+
+  // ---------- interaction ----------
+  function localPoint(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    const p = localPoint(e);
+    const node = findNode(p.x, p.y);
+    downAt = { x: p.x, y: p.y };
+    moved = false;
+    if (node) {
+      dragging = node;
+      node.fixed = true;
+    } else {
+      panning = true;
+      canvas.classList.add('grabbing');
+    }
+    lastMouse = { x: e.clientX, y: e.clientY };
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    const p = localPoint(e);
+
+    if (dragging) {
+      if (Math.hypot(p.x - downAt.x, p.y - downAt.y) > 3) moved = true;
+      const w = toWorld(p.x, p.y);
+      dragging.x = w.x; dragging.y = w.y;
+      dragging.ax = w.x; dragging.ay = w.y;
+      kickLayout(180);
+      return;
+    }
+
+    if (panning) {
+      const dx = e.clientX - lastMouse.x, dy = e.clientY - lastMouse.y;
+      if (Math.hypot(p.x - downAt.x, p.y - downAt.y) > 3) moved = true;
+      view.x += dx; view.y += dy;
+      lastMouse = { x: e.clientX, y: e.clientY };
+      return;
+    }
+
+    const node = findNode(p.x, p.y);
+    const link = node ? null : findLink(p.x, p.y);
+    const changed = node !== hoverNode || link !== hoverLink;
+    hoverNode = node;
+    hoverLink = link;
+
+    if (changed) {
+      canvas.classList.toggle('pointing', !!node);
+      if (node) {
+        let tip = '<strong>' + esc(node.name) + '</strong>';
+        if (node.kind === 'person') {
+          if (node.zi) tip += '　字' + esc(node.zi);
+          const life = lifeText(node);
+          if (life) tip += '<br><small>' + esc(life) + '</small>';
+          if (node.title) tip += '<br><small>' + esc(node.title) + '</small>';
+        } else {
+          tip += '<br><small>' + esc(node.seat) + '</small>';
+        }
+        tooltip.innerHTML = tip;
+        tooltip.classList.add('show');
+      } else {
+        tooltip.classList.remove('show');
+      }
+    }
+
+    if (node || link) {
+      tooltip.style.left = p.x + 'px';
+      tooltip.style.top = p.y + 'px';
+    }
+  });
+
+  canvas.addEventListener('mouseup', e => {
+    const p = localPoint(e);
+    if (dragging) {
+      if (!moved) selectNode(dragging, false);
+      dragging = null;
+      kickLayout(220);
+    } else if (!moved && !panning) {
+      // 点击空白处
+    }
+    panning = false;
+    canvas.classList.remove('grabbing');
+
+    if (!moved && !dragging) {
+      const node = findNode(p.x, p.y);
+      if (!node) {
+        selected = null;
+        panel.classList.remove('open');
+      }
+    }
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    if (dragging) { dragging.fixed = false; dragging = null; }
+    panning = false;
+    canvas.classList.remove('grabbing');
+    hoverNode = null;
+    hoverLink = null;
+    tooltip.classList.remove('show');
+  });
+
+  canvas.addEventListener('dblclick', e => {
+    const p = localPoint(e);
+    if (!findNode(p.x, p.y)) {
+      selected = null;
+      panel.classList.remove('open');
+      fitView();
+    }
+  });
+
+  // touch
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const p = localPoint(t);
+    const node = findNode(p.x, p.y);
+    downAt = { x: p.x, y: p.y };
+    moved = false;
+    if (node) {
+      dragging = node;
+      node.fixed = true;
+    } else {
+      panning = true;
+    }
+    lastMouse = { x: t.clientX, y: t.clientY };
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const p = localPoint(t);
+    if (dragging) {
+      if (Math.hypot(p.x - downAt.x, p.y - downAt.y) > 4) moved = true;
+      const w = toWorld(p.x, p.y);
+      dragging.x = w.x; dragging.y = w.y;
+      dragging.ax = w.x; dragging.ay = w.y;
+      kickLayout(160);
+    } else if (panning) {
+      const dx = t.clientX - lastMouse.x, dy = t.clientY - lastMouse.y;
+      if (Math.hypot(p.x - downAt.x, p.y - downAt.y) > 4) moved = true;
+      view.x += dx; view.y += dy;
+      lastMouse = { x: t.clientX, y: t.clientY };
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', e => {
+    if (dragging && !moved) selectNode(dragging, false);
+    dragging = null;
+    panning = false;
+    kickLayout(200);
+  });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const p = localPoint(e);
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const nz = Math.max(0.3, Math.min(3, view.zoom * delta));
+    const wx = (p.x - view.x) / view.zoom;
+    const wy = (p.y - view.y) / view.zoom;
+    view.zoom = nz;
+    view.x = p.x - wx * nz;
+    view.y = p.y - wy * nz;
+  }, { passive: false });
+
+  // ---------- buttons ----------
+  function zoomAtCenter(factor) {
+    const nz = Math.max(0.3, Math.min(3, view.zoom * factor));
+    const wx = (W / 2 - view.x) / view.zoom;
+    const wy = (H / 2 - view.y) / view.zoom;
+    view.zoom = nz;
+    view.x = W / 2 - wx * nz;
+    view.y = H / 2 - wy * nz;
+  }
+
+  document.getElementById('btnZoomIn').addEventListener('click', () => zoomAtCenter(1.25));
+  document.getElementById('btnZoomOut').addEventListener('click', () => zoomAtCenter(0.8));
+  document.getElementById('btnFit').addEventListener('click', fitView);
+  document.getElementById('btnReset').addEventListener('click', () => {
+    selected = null;
+    panel.classList.remove('open');
+    focusFamily = null;
+    matches.clear();
+    searchInput.value = '';
+    searchCount.textContent = '';
+    renderFilters();
+    rebuild();
+  });
+
+  document.getElementById('detailClose').addEventListener('click', () => {
+    panel.classList.remove('open');
+    selected = null;
+  });
+
+  detailContent.addEventListener('click', e => {
+    const target = e.target.closest('[data-id]');
+    if (!target) return;
+    const nd = nodeById.get(target.getAttribute('data-id'));
+    if (nd) {
+      selectNode(nd, false);
+      detailContent.scrollTop = 0;
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      panel.classList.remove('open');
+      selected = null;
+      if (document.activeElement === searchInput) {
+        searchInput.value = '';
+        matches.clear();
+        searchCount.textContent = '';
+        searchInput.blur();
+      }
+    }
+    if (e.key === '/' && document.activeElement !== searchInput) {
+      e.preventDefault();
+      searchInput.focus();
+    }
+  });
+
+  // ---------- search ----------
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim();
+    matches.clear();
+    if (q) {
+      PEOPLE.forEach(p => {
+        const hay = p.name + ' ' + (p.zi || '') + ' ' + (p.title || '') + ' ' + (FAMILY_NAME[p.family] || '');
+        if (hay.indexOf(q) !== -1) matches.add(p.id);
+      });
+      FAMILIES.forEach(f => {
+        if ((f.name + ' ' + (f.seat || '')).indexOf(q) !== -1) matches.add(f.id);
+      });
+    }
+    // 唯一命中且为人物：切到所属卷并展开右侧简介
+    if (q && matches.size === 1) {
+      const onlyId = Array.from(matches)[0];
+      const person = PEOPLE.find(p => p.id === onlyId);
+      if (person) {
+        if (!nodeById.has(onlyId)) {
+          const eras = eraList(person);
+          const target = eras.indexOf(era) !== -1 ? era : eras[0];
+          if (target !== era) applyEra(target, true);
+        }
+        const node = nodeById.get(onlyId);
+        if (node && selected !== node) { selectNode(node, false); centerOn(node); }
+      }
+    }
+    // 输入完整家族名时展开该族世系
+    if (q) {
+      const famExact = FAMILIES.find(f => f.name === q);
+      if (famExact) {
+        if (!nodeById.has(famExact.id)) {
+          const target = eraList(famExact)[0];
+          if (target !== era) applyEra(target, true);
+        }
+        const famNode = nodeById.get(famExact.id);
+        if (famNode && selected !== famNode) selectNode(famNode, false);
+      }
+    }
+    const visible = nodes.filter(n => matches.has(n.id)).length;
+    searchCount.textContent = q ? matches.size + ' 项' + (matches.size > visible ? '（含另一卷）' : '') : '';
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || !matches.size) return;
+    let first = nodes.find(n => matches.has(n.id));
+    if (!first) {
+      const onlyId = Array.from(matches)[0];
+      const person = PEOPLE.find(p => p.id === onlyId);
+      const fam = FAMILIES.find(f => f.id === onlyId);
+      const target = person ? (eraList(person).indexOf(era) !== -1 ? era : eraList(person)[0]) : (fam ? (eraList(fam)[0]) : era);
+      if (target !== era) applyEra(target, true);
+      first = nodeById.get(onlyId);
+    }
+    if (first) selectNode(first, true);
+  });
+
+  // ---------- legend / filters / stats ----------
+  function renderLegend() {
+    const keys = face === 'a' ? ['kin', 'marriage'] : ['alliance', 'conflict', 'recommend', 'friend'];
+    let html = '<span class="legend-title">' + (face === 'a' ? 'A面 · 亲缘关系' : 'B面 · 交游与政治') + '</span>';
+    keys.forEach(t => {
+      html += '<span class="legend-item"><span class="legend-line" style="background:' + TYPE[t].color + '"></span>' + TYPE[t].name + '</span>';
+    });
+    html += '<span class="legend-item"><span class="legend-line" style="background:#B9A58D"></span>家族归属（簇内细线）</span>';
+    html += '<span class="legend-title" style="margin-left:.6rem">节点</span>';
+    html += '<span class="legend-item"><span class="legend-dot" style="background:#C96F3D;border-color:#a05a2e"></span>门阀家族</span>';
+    html += '<span class="legend-item"><span class="legend-dot" style="background:#fff;border-color:#8B7662"></span>人物（圈色示所属家族）</span>';
+    legendEl.innerHTML = html;
+  }
+
+  function renderFaceSwitch() {
+    faceSwitch.innerHTML = ['a', 'b'].map(f =>
+      '<button class="face-btn' + (face === f ? ' active' : '') + '" data-face="' + f + '" role="tab" aria-selected="' + (face === f) + '">' +
+      (f === 'a' ? 'A · 亲缘' : 'B · 交游政治') + '</button>'
+    ).join('');
+  }
+
+  const ERA_LABEL = {
+    wei: { tab: '曹魏卷', subtitle: '曹魏卷——曹氏、夏侯氏与颍川、汝南士族' },
+    jin: { tab: '两晋卷', subtitle: '两晋卷——「王与马，共天下」的门阀政治' }
+  };
+
+  function renderEraBar() {
+    eraBar.innerHTML = ['wei', 'jin'].map(k =>
+      '<button class="era-btn' + (era === k ? ' active' : '') + '" data-era="' + k + '" role="tab" aria-selected="' + (era === k) + '">' +
+      ERA_LABEL[k].tab + '</button>'
+    ).join('') + '<span class="era-note">两卷各自成图，A面看亲缘、B面看交游政治</span>';
+  }
+
+  function applyEra(k, keepSearch) {
+    if (k === era) return;
+    era = k;
+    focusFamily = null;
+    selected = null;
+    if (!keepSearch) {
+      matches.clear();
+      searchInput.value = '';
+      searchCount.textContent = '';
+    }
+    qaHits = new Set();
+    panel.classList.remove('open');
+    hoverNode = null;
+    hoverLink = null;
+    tooltip.classList.remove('show');
+    subtitle.textContent = ERA_LABEL[era].subtitle;
+    renderEraBar();
+    renderFilters();
+    updateStats();
+    rebuild();
+  }
+
+  eraBar.addEventListener('click', e => {
+    const btn = e.target.closest('[data-era]');
+    if (btn) applyEra(btn.getAttribute('data-era'));
+  });
+
+  function applyFace(f) {
+    if (f === face) return;
+    face = f;
+    hoverNode = null;
+    hoverLink = null;
+    tooltip.classList.remove('show');
+    renderFaceSwitch();
+    renderLegend();
+    updateStats();
+    if (selected) renderDetail(selected);
+  }
+
+  faceSwitch.addEventListener('click', e => {
+    const btn = e.target.closest('[data-face]');
+    if (btn) applyFace(btn.getAttribute('data-face'));
+  });
+
+  function renderFilters() {
+    let html = '<button class="filter-btn' + (focusFamily === null ? ' active' : '') + '" data-family="">全部</button>';
+    FAMILIES.filter(f => eraHas(f, era)).forEach(f => {
+      html += '<button class="filter-btn' + (focusFamily === f.id ? ' active' : '') + '" data-family="' + f.id + '">' +
+        '<span class="dot" style="background:' + f.color + '"></span>' + f.name + '</button>';
+    });
+    filtersEl.innerHTML = html;
+  }
+
+  filtersEl.addEventListener('click', e => {
+    const btn = e.target.closest('[data-family]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-family');
+    focusFamily = id || null;
+    renderFilters();
+  });
+
+  function eraScope() {
+    const fams = FAMILIES.filter(f => eraHas(f, era));
+    const fids = new Set(fams.map(f => f.id));
+    const ppl = PEOPLE.filter(p => eraHas(p, era) && fids.has(p.family));
+    const ids = new Set(fams.map(f => f.id));
+    ppl.forEach(p => ids.add(p.id));
+    const rels = RELATIONS.filter(r => ids.has(r.a) && ids.has(r.b));
+    return { fams, ppl, rels };
+  }
+
+  function updateStats() {
+    const s = eraScope();
+    const a = s.rels.filter(r => FACE_OF[r.type] === 'a').length;
+    const b = s.rels.filter(r => FACE_OF[r.type] === 'b').length;
+    document.getElementById('stats').textContent =
+      s.fams.length + ' 个家族　·　' + s.ppl.length + ' 位人物　·　A面亲缘 ' + a + ' 条　·　B面交游政治 ' + b + ' 条';
+  }
+
+  // ---------- 自然语言问答（本地检索，无外部请求） ----------
+  const askLog = document.getElementById('askLog');
+  const askInput = document.getElementById('askInput');
+  const askSend = document.getElementById('askSend');
+  const askChips = document.getElementById('askChips');
+
+  const QP = new Map(PEOPLE.map(p => [p.id, p]));
+  const QF = new Map(FAMILIES.map(f => [f.id, f]));
+  const CN_NUM = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+
+  function qaName(id) {
+    const p = QP.get(id);
+    return p ? p.name : (QF.get(id) ? QF.get(id).name : id);
+  }
+  function qaTypeName(t) { return (TYPE[t] && TYPE[t].name) || ''; }
+  function qaUnique(arr) { return Array.from(new Set(arr.filter(Boolean))); }
+
+  // 实体识别：先长后短，命中即占位，避免「司马」误配「司马懿」
+  function qaEntities(q) {
+    const cands = [];
+    PEOPLE.forEach(p => {
+      cands.push({ kind: 'person', id: p.id, label: p.name, term: p.name });
+      if (p.zi) cands.push({ kind: 'person', id: p.id, label: p.name, term: p.zi });
+    });
+    FAMILIES.forEach(f => cands.push({ kind: 'family', id: f.id, label: f.name, term: f.name }));
+    cands.sort((a, b) => b.term.length - a.term.length);
+
+    const used = new Array(q.length).fill(false);
+    const hits = [];
+    cands.forEach(c => {
+      for (let i = q.indexOf(c.term); i !== -1; i = q.indexOf(c.term, i + 1)) {
+        let ok = true;
+        for (let k = i; k < i + c.term.length; k++) { if (used[k]) { ok = false; break; } }
+        if (!ok) continue;
+        for (let k = i; k < i + c.term.length; k++) used[k] = true;
+        hits.push({ kind: c.kind, id: c.id, label: c.label, idx: i });
+        break;
+      }
+    });
+    hits.sort((a, b) => a.idx - b.idx);
+    const seen = new Set(), out = [];
+    hits.forEach(h => { if (!seen.has(h.id)) { seen.add(h.id); out.push(h); } });
+    return out;
+  }
+
+  function qaSnippet(p, kw) {
+    const d = p.desc || '';
+    const i = d.indexOf(kw);
+    if (i === -1) return d.slice(0, 44) + (d.length > 44 ? '…' : '');
+    const s = Math.max(0, i - 12);
+    return (s > 0 ? '…' : '') + d.slice(s, s + 50) + (s + 50 < d.length ? '…' : '');
+  }
+
+  // 世系推算：沿「父子 / 祖孙」链找共同祖先，换算成曾祖、从兄弟等称谓
+  function qaGender(p) {
+    if (!p) return 'm';
+    if (['xie_daoyun', 'yu_wenjun', 'yang_xianrong'].indexOf(p.id) !== -1) return 'f';
+    if (/皇后|公主|太后|妻/.test(p.title || '')) return 'f';
+    return 'm';
+  }
+
+  function qaParentMap(famId) {
+    const map = new Map();
+    RELATIONS.forEach(r => {
+      if (r.type !== 'kin') return;
+      const a = QP.get(r.a), b = QP.get(r.b);
+      if (!a || !b || a.family !== famId || b.family !== famId) return;
+      const s = r.label || '';
+      if (!/^(养|族|继)?父(子|女)/.test(s) && !/祖孙|曾祖孙/.test(s)) return;
+      const par = a.gen < b.gen ? a : b;
+      const ch = a.gen < b.gen ? b : a;
+      if (par.gen === ch.gen) return;
+      if (!map.has(ch.id)) map.set(ch.id, { id: par.id, w: Math.max(1, ch.gen - par.gen) });
+    });
+    return map;
+  }
+
+  function qaAncestors(id, parentMap) {
+    const res = new Map();
+    res.set(id, { dist: 0, path: [id] });
+    const stack = [{ id: id, dist: 0, path: [id] }];
+    while (stack.length) {
+      const cur = stack.pop();
+      const p = parentMap.get(cur.id);
+      if (!p) continue;
+      const nd = cur.dist + p.w;
+      const np = cur.path.concat(p.id);
+      const old = res.get(p.id);
+      if (old && old.dist <= nd) continue;
+      res.set(p.id, { dist: nd, path: np });
+      stack.push({ id: p.id, dist: nd, path: np });
+    }
+    return res;
+  }
+
+  function qaKinTerms(upA, upB, ga, gb) {
+    const anc = { 1: ['父', '母'], 2: ['祖父', '祖母'], 3: ['曾祖父', '曾祖母'], 4: ['高祖父', '高祖母'], 5: ['天祖父', '天祖母'] };
+    const des = { 1: ['子', '女'], 2: ['孙', '孙女'], 3: ['曾孙', '曾孙女'], 4: ['玄孙', '玄孙女'], 5: ['来孙', '来孙女'] };
+    const pick = (arr, g) => arr[g === 'f' ? 1 : 0];
+    if (upA === 0) {
+      return { a: pick(anc[upB] || ['世祖', '世祖母'], ga), b: pick(des[upB] || ['世孙', '世孙女'], gb) };
+    }
+    if (upB === 0) {
+      return { a: pick(des[upA] || ['世孙', '世孙女'], ga), b: pick(anc[upA] || ['世祖', '世祖母'], gb) };
+    }
+    if (upA === upB) {
+      if (upA === 1) return { a: '兄弟/姊妹', b: '兄弟/姊妹' };
+      if (upA === 2) return { a: '从兄弟/从姊妹', b: '从兄弟/从姊妹' };
+      if (upA === 3) return { a: '再从兄弟/再从姊妹', b: '再从兄弟/再从姊妹' };
+      return { a: '族兄弟（同' + upA + '世祖）', b: '族兄弟（同' + upA + '世祖）' };
+    }
+    if (upA < upB) {
+      const d = upB - upA;
+      if (d === 1) {
+        if (upA === 1) return { a: ga === 'f' ? '姑母' : '伯叔', b: gb === 'f' ? '侄女' : '侄' };
+        if (upA === 2) return { a: ga === 'f' ? '从姑' : '从伯叔', b: gb === 'f' ? '从侄女' : '从侄' };
+        return { a: ga === 'f' ? '族姑' : '族伯叔', b: gb === 'f' ? '族侄女' : '族侄' };
+      }
+      if (d === 2 && upA === 1) {
+        return { a: ga === 'f' ? '姑祖母' : '伯祖父/叔祖父', b: gb === 'f' ? '侄孙女' : '侄孙' };
+      }
+      return { a: '族中长辈（高 ' + d + ' 辈）', b: '族中晚辈（低 ' + d + ' 辈）' };
+    }
+    const d = upA - upB;
+    if (d === 1) {
+      if (upB === 1) return { a: ga === 'f' ? '侄女' : '侄', b: gb === 'f' ? '姑母' : '伯叔' };
+      if (upB === 2) return { a: ga === 'f' ? '从侄女' : '从侄', b: gb === 'f' ? '从姑' : '从伯叔' };
+      return { a: ga === 'f' ? '族侄女' : '族侄', b: gb === 'f' ? '族姑' : '族伯叔' };
+    }
+    if (d === 2 && upB === 1) {
+      return { a: ga === 'f' ? '侄孙女' : '侄孙', b: gb === 'f' ? '姑祖母' : '伯祖父/叔祖父' };
+    }
+    return { a: '族中晚辈（低 ' + d + ' 辈）', b: '族中长辈（高 ' + d + ' 辈）' };
+  }
+
+  function qaTreeKinship(a, b) {
+    if (!a || !b || a.family !== b.family) return null;
+    const pm = qaParentMap(a.family);
+    const anA = qaAncestors(a.id, pm);
+    const anB = qaAncestors(b.id, pm);
+    let best = null;
+    anA.forEach((va, anc) => {
+      const vb = anB.get(anc);
+      if (!vb) return;
+      const total = va.dist + vb.dist;
+      if (!best || total < best.total || (total === best.total && Math.max(va.dist, vb.dist) < Math.max(best.upA, best.upB))) {
+        best = { anc: anc, upA: va.dist, upB: vb.dist, total: total, pathA: va.path, pathB: vb.path };
+      }
+    });
+    if (!best) return null;
+    const ga = qaGender(QP.get(a.id)), gb = qaGender(QP.get(b.id));
+    const terms = qaKinTerms(best.upA, best.upB, ga, gb);
+    const chain = best.pathA.concat(best.pathB.slice(0, -1).reverse());
+    const names = chain.map(id => '<strong>' + esc(qaName(id)) + '</strong>').join(' → ');
+    const skipped = best.total > chain.length - 1;
+    return {
+      title: a.name + ' × ' + b.name,
+      body: '<p>按世系推算：<strong>' + esc(a.name) + '</strong>是<strong>' + esc(b.name) + '</strong>的' + terms.a +
+        '；<strong>' + esc(b.name) + '</strong>是<strong>' + esc(a.name) + '</strong>的' + terms.b + '。</p>' +
+        '<p>世系链：' + names + '（共 ' + best.total + ' 世' + (skipped ? '，中间有未收录的世代' : '') + '）。</p>' +
+        '<p class="qa-src">图谱中没有二人直接的连线，此结果由家族世系树推算。</p>',
+      sources: qaUnique([QP.get(a.id) && QP.get(a.id).source, QP.get(b.id) && QP.get(b.id).source]),
+      ids: chain,
+      tree: { famId: a.family, ids: chain },
+      face: 'a',
+      meta: '依据：世系树推算'
+    };
+  }
+
+  function qaRelationAnswer(a, b, q) {
+    const rels = RELATIONS.filter(r => (r.a === a.id && r.b === b.id) || (r.a === b.id && r.b === a.id));
+    const why = /为什么|为何|决裂|交恶|反目|翻脸/.test(q);
+
+    if (!rels.length) {
+      if (a.family === b.family) {
+        const kin = qaTreeKinship(a, b);
+        if (kin) return kin;
+        const d = (b.gen || 0) - (a.gen || 0);
+        if (d !== 0) {
+          return {
+            title: a.name + ' × ' + b.name,
+            body: '<p>世系树中没有找到二人的共同祖先。按族内辈分推算，<strong>' + esc(a.name) + '</strong>比<strong>' + esc(b.name) + '</strong>' +
+              (d > 0 ? '高 ' : '低 ') + Math.abs(d) + ' 辈，属族中' + (d > 0 ? '长辈' : '晚辈') + '。</p>' +
+              '<p class="qa-src">此结论只依据世代号，未找到共祖链条。</p>',
+            ids: [a.id, b.id], face: 'a', meta: '依据：辈分推算'
+          };
+        }
+        return {
+          title: a.name + ' × ' + b.name,
+          body: '<p>二人同属 ' + esc(FAMILY_NAME[a.family]) + '，图谱中没有直接连线，世系树中也找不到共同祖先，按世代号则为同辈族亲。</p>',
+          ids: [a.id, b.id], meta: '依据：族属判定'
+        };
+      }
+      const na = new Set(), nb = new Set();
+      RELATIONS.forEach(r => {
+        if (r.a === a.id) na.add(r.b);
+        if (r.b === a.id) na.add(r.a);
+        if (r.a === b.id) nb.add(r.b);
+        if (r.b === b.id) nb.add(r.a);
+      });
+      const common = Array.from(na).filter(x => nb.has(x) && QP.has(x));
+      if (common.length) {
+        const names = common.slice(0, 3).map(id => QP.get(id).name).join('、');
+        return {
+          title: a.name + ' × ' + b.name,
+          body: '<p>没有直接连线，但二人通过 <strong>' + esc(names) + '</strong> 相连，可在图中沿高亮节点看到这条两跳路径。</p>',
+          ids: [a.id, b.id].concat(common.slice(0, 3)), meta: '依据：两跳路径'
+        };
+      }
+      const fr = RELATIONS.filter(r => r.type !== 'kin' && r.type !== 'marriage' && ((r.a === a.family && r.b === b.family) || (r.b === a.family && r.a === b.family)));
+      if (fr.length) {
+        return {
+          title: a.name + ' × ' + b.name,
+          body: '<p>二人没有直接连线，但两族之间有关系：</p><ul>' + fr.map(r => '<li><strong>' + qaTypeName(r.type) + '</strong>：' + esc(r.label) + '</li>').join('') + '</ul>',
+          ids: [a.id, b.id], meta: '依据：家族关系'
+        };
+      }
+      return {
+        title: a.name + ' × ' + b.name,
+        body: '<p>图谱中没有检索到直接关系，也没有可用的中间人或家族关系。</p>',
+        ids: [a.id, b.id], meta: '依据：图谱检索'
+      };
+    }
+
+    const ordered = why
+      ? rels.slice().sort((x, y) => (x.type === 'conflict' ? -1 : 1) - (y.type === 'conflict' ? -1 : 1))
+      : rels;
+    let lead = '';
+    if (why) {
+      const conf = rels.filter(r => r.type === 'conflict');
+      lead = conf.length
+        ? '<p>直接原因是：' + esc(conf.map(r => r.label).join('；')) + '。</p>'
+        : '<p>图谱中没有「决裂」类记录，二人的关系以' + qaTypeName(rels[0].type) + '为主。</p>';
+    }
+    const items = ordered.map(r => '<li><strong>' + qaTypeName(r.type) + '</strong>：' + esc(r.label) + '</li>').join('');
+    const sources = qaUnique([a.source, b.source]);
+    const needB = rels.some(r => FACE_OF[r.type] === 'b');
+    return {
+      title: a.name + ' × ' + b.name,
+      body: lead + '<ul>' + items + '</ul>',
+      sources: sources,
+      ids: [a.id, b.id],
+      face: needB ? 'b' : 'a',
+      tree: (!needB && a.family === b.family) ? { famId: a.family, ids: [a.id, b.id] } : null,
+      meta: '依据：图谱直连 ' + rels.length + ' 条'
+    };
+  }
+
+  function qaKinAnswer(p, q) {
+    const want = [];
+    if (/儿子|长子|次子|幼子|子嗣|子女/.test(q)) want.push('son');
+    if (/女儿/.test(q)) want.push('daughter');
+    if (/父亲|之父/.test(q)) want.push('parent');
+    if (/兄弟|兄长|弟弟|胞兄/.test(q)) want.push('brother');
+    if (/妻子|夫人|妻室|配偶|娶/.test(q)) want.push('marriage');
+    if (/后代|子孙|后裔/.test(q)) want.push('son', 'daughter');
+
+    const found = [];
+    RELATIONS.forEach(r => {
+      if (r.a !== p.id && r.b !== p.id) return;
+      const otherId = r.a === p.id ? r.b : r.a;
+      const o = QP.get(otherId);
+      if (!o) return;
+      const lbl = r.label || '';
+      let kind = null;
+      if (r.type === 'marriage') kind = 'marriage';
+      else if (/^(养|族|继)?父(子|女)/.test(lbl)) {
+        if (p.gen < o.gen) kind = /父子/.test(lbl) ? 'son' : 'daughter';
+        else if (p.gen > o.gen) kind = 'parent';
+      } else if (/兄弟|从兄弟|族兄弟/.test(lbl)) kind = 'brother';
+      if (kind && want.indexOf(kind) !== -1) found.push({ o: o, kind: kind, label: lbl });
+    });
+
+    if (!found.length) {
+      return {
+        title: p.name,
+        body: '<p>图谱中没有检索到这类亲属记录。可以试试「介绍' + esc(p.name) + '」。</p>',
+        ids: [p.id], meta: '依据：图谱检索'
+      };
+    }
+    const labelOf = { son: '子', daughter: '女', parent: '父辈', brother: '兄弟', marriage: '妻 / 夫' };
+    const items = found.map(f => '<li><strong>' + labelOf[f.kind] + '</strong>：' + esc(f.o.name) + (f.o.title ? '（' + esc(f.o.title) + '）' : '') + '<span class="qa-src">　' + esc(f.label) + '</span></li>').join('');
+    return {
+      title: p.name + ' · 亲属',
+      body: '<ul>' + items + '</ul>',
+      sources: qaUnique([p.source].concat(found.map(f => f.o.source))),
+      ids: [p.id].concat(found.map(f => f.o.id)),
+      tree: { famId: p.family, ids: [p.id].concat(found.map(f => f.o.id)) },
+      face: 'a',
+      meta: '依据：血缘 / 姻亲'
+    };
+  }
+
+  function qaIntroAnswer(p) {
+    const life = lifeText(p);
+    const line = [];
+    if (p.zi) line.push('字 ' + esc(p.zi));
+    if (life) line.push(esc(life));
+    if (p.title) line.push(esc(p.title));
+    let body = '';
+    if (line.length) body += '<p>' + line.join('　·　') + '</p>';
+    body += '<p>' + esc(p.desc || '') + '</p>';
+    const rels = RELATIONS.filter(r => r.a === p.id || r.b === p.id);
+    if (rels.length) {
+      const top = rels.slice(0, 3).map(r => {
+        const oid = r.a === p.id ? r.b : r.a;
+        return esc(qaName(oid)) + '（' + qaTypeName(r.type) + '）';
+      });
+      body += '<p><strong>主要关系</strong>：' + top.join('、') + '。</p>';
+    }
+    return {
+      title: p.name,
+      body: body,
+      sources: qaUnique([p.source]),
+      ids: [p.id].concat(rels.slice(0, 2).map(r => (r.a === p.id ? r.b : r.a))),
+      face: 'a',
+      meta: '依据：人物志'
+    };
+  }
+
+  function qaFamilyAnswer(f) {
+    const members = PEOPLE.filter(p => p.family === f.id).sort((a, b) =>
+      (a.gen - b.gen) || (yearOf(a.born) - yearOf(b.born)) || (a.name < b.name ? -1 : 1)
+    );
+    const gens = Array.from(new Set(members.map(p => p.gen))).sort((a, b) => a - b);
+    const list = gens.map(g => {
+      const names = members.filter(p => p.gen === g).map(p => esc(p.name)).join('、');
+      return '<li>' + (CN_NUM[g] || g) + '世：' + names + '</li>';
+    }).join('');
+    return {
+      title: f.name,
+      body: '<p>' + esc(f.desc) + '</p><p><strong>郡望</strong>：' + esc(f.seat) + '　<strong>时期</strong>：' + esc(f.eraLabel || '') + '</p><ul>' + list + '</ul>',
+      ids: [f.id].concat(members.map(p => p.id)),
+      face: 'a',
+      meta: '依据：家族志 · ' + members.length + ' 人'
+    };
+  }
+
+  function qaKeywordAnswer(q) {
+    const kw = q.replace(/有哪些人参与|有哪些人|谁参与|参与了|有哪些|是谁|是什么关系|介绍|简介|生平|资料|的/g, '').trim();
+    if (kw.length < 2) return qaFallback(q);
+    const score = new Map();
+    const add = (id, w) => score.set(id, (score.get(id) || 0) + w);
+    RELATIONS.forEach(r => {
+      if ((r.label || '').indexOf(kw) !== -1) { add(r.a, 3); add(r.b, 3); }
+    });
+    PEOPLE.forEach(p => {
+      const hay = [p.name, p.zi, p.title, p.desc, p.source].join(' ');
+      if (hay.indexOf(kw) !== -1) add(p.id, 2);
+    });
+    FAMILIES.forEach(f => {
+      if ((f.desc + f.highlights.join('')).indexOf(kw) !== -1) add(f.id, 1);
+    });
+    const ids = Array.from(score.keys()).sort((x, y) => score.get(y) - score.get(x)).slice(0, 8);
+    if (!ids.length) return qaFallback(q);
+    const items = ids.filter(id => QP.has(id)).slice(0, 7).map(id => {
+      const p = QP.get(id);
+      return '<li><strong>' + esc(p.name) + '</strong>' + (p.title ? '（' + esc(p.title) + '）' : '') + '：' + esc(qaSnippet(p, kw)) + '</li>';
+    }).join('');
+    return {
+      title: '「' + esc(kw) + '」相关',
+      body: '<p>图谱与人物小传中检索到以下线索：</p><ul>' + items + '</ul>',
+      ids: ids,
+      face: 'b',
+      meta: '依据：全文检索'
+    };
+  }
+
+  function qaFallback(q) {
+    return {
+      title: '没有找到直接答案',
+      body: '<p>「' + esc(q) + '」在现有图谱里没有匹配到人物或关系。可以试试：</p><ul>' +
+        '<li>曹操和荀彧是什么关系？</li><li>荀彧有哪些儿子？</li><li>介绍谢安</li><li>琅琊王氏</li></ul>',
+      ids: [], meta: '依据：未命中'
+    };
+  }
+
+  function qaAnswer(raw) {
+    const q = String(raw || '').trim();
+    const nq = q.replace(/[\s，。？！、,.?!"'「」『』（）()：:；;]/g, '');
+    if (!nq) return qaFallback(q);
+    const ents = qaEntities(nq);
+    const persons = ents.filter(e => e.kind === 'person').map(e => QP.get(e.id)).filter(Boolean);
+    const fams = ents.filter(e => e.kind === 'family').map(e => QF.get(e.id)).filter(Boolean);
+
+    if (persons.length >= 2) return qaRelationAnswer(persons[0], persons[1], nq);
+    if (persons.length === 1) {
+      if (/关系|联系/.test(nq) && /和|与|跟/.test(nq)) {
+        const other = nq.split(/和|与|跟/)
+          .map(s => s.replace(/是什么关系|什么关系|的关系|关系|联系/g, ''))
+          .filter(s => s && s !== persons[0].name && s.indexOf(persons[0].name) === -1);
+        if (other.length) {
+          return {
+            title: persons[0].name + ' × ' + other[0],
+            body: '<p>图谱中未收录「' + esc(other[0]) + '」，无法给出二者的关系。</p><p>当前收录范围：曹魏、两晋的门阀人物。</p>',
+            ids: [persons[0].id], meta: '依据：未收录'
+          };
+        }
+      }
+      if (/有哪些|儿子|女儿|父亲|兄弟|妻子|夫人|后代|子孙|亲属/.test(nq)) return qaKinAnswer(persons[0], nq);
+      if (/关系|联系|为何|为什么|决裂|交恶/.test(nq) && fams.length) return qaRelationAnswer(persons[0], fams[0], nq);
+      return qaIntroAnswer(persons[0]);
+    }
+    if (fams.length === 1) return qaFamilyAnswer(fams[0]);
+    return qaKeywordAnswer(nq);
+  }
+
+  function qaEnsureEra(ids) {
+    const missing = ids.some(id => !nodeById.has(id));
+    if (!missing) return;
+    const count = { wei: 0, jin: 0 };
+    ids.forEach(id => {
+      const p = QP.get(id);
+      if (p) eraList(p).forEach(e => { if (count[e] != null) count[e]++; });
+    });
+    const target = count.wei > count.jin ? 'wei' : (count.jin > count.wei ? 'jin' : era);
+    if (target !== era) applyEra(target);
+  }
+
+  function qaLocate(ids) {
+    const ns = ids.map(id => nodeById.get(id)).filter(Boolean);
+    if (!ns.length) return;
+    qaHits = new Set(ns.map(n => n.id));
+    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+    ns.forEach(n => {
+      minX = Math.min(minX, n.x - n.r);
+      maxX = Math.max(maxX, n.x + n.r);
+      minY = Math.min(minY, n.y - n.r);
+      maxY = Math.max(maxY, n.y + n.r);
+    });
+    const pad = 130;
+    const bw = Math.max(1, maxX - minX + pad * 2);
+    const bh = Math.max(1, maxY - minY + pad * 2);
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const z = Math.max(0.55, Math.min(1.25, Math.min(W / bw, H / bh)));
+    view.zoom = z;
+    view.x = W / 2 - cx * z;
+    view.y = H / 2 - cy * z;
+  }
+
+  function qaPush(role, html) {
+    const div = document.createElement('div');
+    div.className = 'qa-msg ' + (role === 'user' ? 'qa-user' : 'qa-bot');
+    div.innerHTML = html;
+    askLog.appendChild(div);
+    askLog.scrollTop = askLog.scrollHeight;
+  }
+
+  function qaRender(ans) {
+    let html = '';
+    if (ans.title) html += '<h4>' + esc(ans.title) + '</h4>';
+    html += ans.body || '';
+    if (ans.sources && ans.sources.length) {
+      html += '<div class="qa-src">史料：' + ans.sources.map(esc).join('；') + '</div>';
+    }
+    html += '<div class="qa-meta"><span class="qa-badge">' + esc(ans.meta || '依据：图谱检索') + '</span>';
+    if (ans.tree) html += '<span class="qa-badge">世系图已高亮</span>';
+    if (ans.ids && ans.ids.length && !ans.tree) html += '<span class="qa-badge">图中已定位</span>';
+    if (ans.ids && ans.ids.length) html += '<button class="qa-clear" data-clear="' + (ans.tree ? 'tree' : 'canvas') + '">清除高亮</button>';
+    html += '</div>';
+    qaPush('bot', html);
+  }
+
+  function qaAsk(text) {
+    const q = String(text || '').trim();
+    if (!q) return;
+    qaTreeHits = new Set();
+    qaTreeFam = null;
+    qaPush('user', esc(q));
+    askInput.value = '';
+    let ans;
+    try {
+      ans = qaAnswer(q);
+    } catch (err) {
+      ans = { title: '检索出错', body: '<p>' + esc(String(err && err.message || err)) + '</p>', ids: [] };
+    }
+    qaRender(ans);
+    if (ans.tree && ans.tree.famId) {
+      qaEnsureEra([ans.tree.famId].concat(ans.tree.ids || []));
+      applyFace('a');
+      qaHits = new Set();
+      qaTreeHits = new Set(ans.tree.ids || []);
+      qaTreeFam = ans.tree.famId;
+      const famNode = nodeById.get(ans.tree.famId);
+      if (famNode) {
+        selected = null;
+        renderDetail(famNode);
+        panel.scrollTop = 0;
+      }
+      return;
+    }
+    if (ans.ids && ans.ids.length) {
+      panel.classList.remove('open');
+      selected = null;
+      qaEnsureEra(ans.ids);
+      if (ans.face) applyFace(ans.face);
+      qaLocate(ans.ids);
+    }
+  }
+
+  askChips.addEventListener('click', e => {
+    const btn = e.target.closest('[data-q]');
+    if (btn) qaAsk(btn.getAttribute('data-q'));
+  });
+  askSend.addEventListener('click', () => qaAsk(askInput.value));
+  askInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); qaAsk(askInput.value); }
+  });
+  askLog.addEventListener('click', e => {
+    const btn = e.target.closest('[data-clear]');
+    if (!btn) return;
+    const kind = btn.getAttribute('data-clear');
+    qaHits = new Set();
+    if (kind === 'tree') {
+      qaTreeHits = new Set();
+      qaTreeFam = null;
+      panel.classList.remove('open');
+    }
+  });
+
+  qaPush('bot', '<h4>你好，我是这套图谱的问答原型</h4>' +
+    '<p>可以问我「曹操和荀彧是什么关系」「荀彧有哪些儿子」「介绍谢安」「琅琊王氏」。</p>' +
+    '<p class="qa-src">本地检索：实体识别 → 关系检索 → 史料引用 → 图谱定位。</p>');
+
+
+  // ---------- resize / loop ----------
+  function resizeCanvas() {
+    const rect = wrap.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    W = Math.max(320, Math.round(rect.width));
+    H = Math.max(360, Math.round(rect.height));
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function rebuild() {
+    resizeCanvas();
+    buildGraph();
+    relax(360);
+    fitView();
+    needsRelax = true;
+    relaxBudget = 120;
+  }
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const keep = selected ? selected.id : null;
+      rebuild();
+      if (keep) {
+        const nd = nodeById.get(keep);
+        if (nd) selectNode(nd, false);
+      }
+    }, 200);
+  });
+
+  function loop() {
+    if (needsRelax && relaxBudget > 0) {
+      const m = relax(3);
+      relaxBudget -= 3;
+      if (m < 0.04) relaxBudget = 0;
+      if (relaxBudget <= 0) needsRelax = false;
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- init ----------
+  subtitle.textContent = ERA_LABEL[era].subtitle;
+  renderEraBar();
+  renderLegend();
+  renderFaceSwitch();
+  renderFilters();
+  updateStats();
+  rebuild();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
